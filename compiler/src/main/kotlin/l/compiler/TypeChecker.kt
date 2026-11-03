@@ -1,18 +1,14 @@
 package l.compiler
 
-/**
- * Minimal type checker for a subset of L.
- * Infers types for literals and simple expressions; checks basic mismatches.
- */
 class TypeChecker(private val diagnostics: DiagnosticBag) {
 
     private val scopes = ArrayDeque<MutableMap<String, String>>()
 
     fun check(file: AstNode.File) {
         push()
-        // predefined
         current()["true"] = "Boolean"
         current()["false"] = "Boolean"
+        current()["println"] = "Function"
         for (d in file.declarations) checkDecl(d)
         pop()
     }
@@ -21,10 +17,7 @@ class TypeChecker(private val diagnostics: DiagnosticBag) {
         when (d) {
             is Decl.Function -> {
                 push()
-                for (p in d.params) {
-                    val t = p.type ?: "Any"
-                    current()[p.name] = t
-                }
+                for (p in d.params) current()[p.name] = p.type ?: "Any"
                 when (val body = d.body) {
                     is Body.Block -> body.statements.forEach { checkStmt(it, d.returnType) }
                     is Body.Expression -> {
@@ -73,6 +66,29 @@ class TypeChecker(private val diagnostics: DiagnosticBag) {
                 }
             }
             is Stmt.ExprStmt -> infer(s.expr)
+            is Stmt.If -> {
+                val ct = infer(s.condition)
+                if (ct != "Boolean" && ct != "Any") {
+                    diagnostics.warning("Condition should be Boolean, got $ct")
+                }
+                push()
+                s.thenBranch.forEach { checkStmt(it, expectedReturn) }
+                pop()
+                if (s.elseBranch != null) {
+                    push()
+                    s.elseBranch.forEach { checkStmt(it, expectedReturn) }
+                    pop()
+                }
+            }
+            is Stmt.While -> {
+                val ct = infer(s.condition)
+                if (ct != "Boolean" && ct != "Any") {
+                    diagnostics.warning("Condition should be Boolean, got $ct")
+                }
+                push()
+                s.body.forEach { checkStmt(it, expectedReturn) }
+                pop()
+            }
             Stmt.Empty -> {}
         }
     }
@@ -115,7 +131,7 @@ class TypeChecker(private val diagnostics: DiagnosticBag) {
         is Expr.Call -> {
             infer(e.callee)
             e.args.forEach { infer(it) }
-            "Any"
+            "Unit"
         }
         is Expr.Member -> {
             infer(e.receiver)
@@ -140,7 +156,6 @@ class TypeChecker(private val diagnostics: DiagnosticBag) {
         if (expected == "Any" || got == "Any") return true
         if (expected.endsWith("?") && got.removeSuffix("?") == expected.removeSuffix("?")) return true
         if (got == "Nothing?" && expected.endsWith("?")) return true
-        if (expected == "Unit" && got == "Unit") return true
         return false
     }
 
@@ -148,9 +163,7 @@ class TypeChecker(private val diagnostics: DiagnosticBag) {
     private fun pop() = scopes.removeLast()
     private fun current() = scopes.last()
     private fun lookup(name: String): String? {
-        for (i in scopes.indices.reversed()) {
-            scopes[i][name]?.let { return it }
-        }
+        for (i in scopes.indices.reversed()) scopes[i][name]?.let { return it }
         return null
     }
 }
