@@ -22,6 +22,8 @@ L has **full feature parity with Kotlin** while adding Minecraft-first ergonomic
 | [Goals](docs/GOALS.md) | Primary goals and non-goals |
 | [Specification](docs/SPEC.md) | Early language specification draft |
 | [Syntax](docs/SYNTAX.md) | Kotlin parity + Minecraft DSL vision |
+| [Grammar](docs/GRAMMAR.md) | Formal grammar sketch |
+| [Compiler](docs/COMPILER.md) | Compiler architecture notes |
 | [Roadmap](ROADMAP.md) | Development phases |
 | [Contributing](CONTRIBUTING.md) | How to contribute |
 
@@ -90,7 +92,9 @@ L/
 ├── docs/
 │   ├── GOALS.md
 │   ├── SPEC.md
-│   └── SYNTAX.md
+│   ├── SYNTAX.md
+│   ├── GRAMMAR.md
+│   └── COMPILER.md
 └── examples/
     ├── simple-mod/
     └── launcher-core/
@@ -103,12 +107,13 @@ L/
 - [x] Language vision & goals
 - [x] High-level specification draft
 - [x] Syntax overview + Minecraft DSL vision
+- [x] Formal grammar sketch
+- [x] Compiler architecture notes
 - [x] Roadmap
 - [x] Example sketches
-- [ ] Formal grammar
-- [ ] Core type system specification
-- [ ] Compiler prototype
+- [ ] Detailed type system outline
 - [ ] Standard library design
+- [ ] Compiler prototype
 - [ ] Minecraft DSL prototypes
 - [ ] Tooling (LSP, formatter, build plugin)
 
