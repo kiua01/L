@@ -6,12 +6,13 @@ import kotlin.test.assertTrue
 
 class CompilerTests {
     @Test
-    fun stringConcat() {
+    fun multipleFunctions() {
         val source = """
+            fun add(a: Int, b: Int): Int {
+                return a + b
+            }
             fun main() {
-                val name = "L"
-                val g = "Hi " + name
-                println(g)
+                println(add(2, 3))
             }
         """.trimIndent()
         val r = CompilerPipeline.analyze(source)
