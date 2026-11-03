@@ -6,12 +6,14 @@ class Lexer(private val source: String) {
     private var column = 1
 
     private val keywords = mapOf(
+        // Full English forms
         "package" to TokenType.PACKAGE,
         "import" to TokenType.IMPORT,
         "class" to TokenType.CLASS,
         "interface" to TokenType.INTERFACE,
         "object" to TokenType.OBJECT,
         "fun" to TokenType.FUN,
+        "function" to TokenType.FUN,
         "val" to TokenType.VAL,
         "var" to TokenType.VAR,
         "if" to TokenType.IF,
@@ -52,10 +54,34 @@ class Lexer(private val source: String) {
         "true" to TokenType.TRUE,
         "false" to TokenType.FALSE,
         "null" to TokenType.NULL,
-        // L domain words — treated as soft keywords
+
+        // Modern abbreviated English (same tokens)
+        "pkg" to TokenType.PACKAGE,
+        "imp" to TokenType.IMPORT,
+        "cls" to TokenType.CLASS,
+        "iface" to TokenType.INTERFACE,
+        "obj" to TokenType.OBJECT,
+        "fn" to TokenType.FUN,
+        "def" to TokenType.FUN,
+        "let" to TokenType.VAL,
+        "mut" to TokenType.VAR,
+        "ret" to TokenType.RETURN,
+        "loop" to TokenType.WHILE,
+        "match" to TokenType.WHEN,
+        "pub" to TokenType.PUBLIC,
+        "priv" to TokenType.PRIVATE,
+        "prot" to TokenType.PROTECTED,
+        "abs" to TokenType.ABSTRACT,
+        "ovrd" to TokenType.OVERRIDE,
+        "sus" to TokenType.SUSPEND,
+
+        // Domain soft keywords
         "registry" to TokenType.REGISTRY,
+        "reg" to TokenType.REGISTRY,
         "packet" to TokenType.PACKET,
+        "pkt" to TokenType.PACKET,
         "entity" to TokenType.ENTITY,
+        "ent" to TokenType.ENTITY,
         "on" to TokenType.ON,
         "onEach" to TokenType.ONEACH,
         "Scene3D" to TokenType.SCENE3D
