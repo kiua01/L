@@ -184,6 +184,9 @@ class Parser(
                 val body = if (check(TokenType.LBRACE)) parseBlock() else listOf(parseStatement())
                 return Stmt.While(cond, body)
             }
+            match(TokenType.WHEN) -> {
+                return parseWhen()
+            }
             else -> {
                 if (isDeclarationStart() || check(TokenType.RBRACE) || check(TokenType.EOF) || check(TokenType.ELSE))
                     return Stmt.Empty
@@ -192,6 +195,33 @@ class Parser(
                 return Stmt.ExprStmt(expr)
             }
         }
+    }
+
+
+    private fun parseWhen(): Stmt.When {
+        var subject: Expr? = null
+        if (match(TokenType.LPAREN)) {
+            subject = parseExpression()
+            expect(TokenType.RPAREN, ")")
+        }
+        expect(TokenType.LBRACE, "{")
+        val entries = mutableListOf<WhenEntry>()
+        while (!isAtEnd() && !check(TokenType.RBRACE)) {
+            if (match(TokenType.ELSE)) {
+                expect(TokenType.ARROW, "->")
+                val body = if (check(TokenType.LBRACE)) parseBlock() else listOf(parseStatement())
+                entries += WhenEntry(null, body)
+            } else {
+                val conditions = mutableListOf<Expr>()
+                conditions += parseExpression()
+                while (match(TokenType.COMMA)) conditions += parseExpression()
+                expect(TokenType.ARROW, "->")
+                val body = if (check(TokenType.LBRACE)) parseBlock() else listOf(parseStatement())
+                entries += WhenEntry(conditions, body)
+            }
+        }
+        expect(TokenType.RBRACE, "}")
+        return Stmt.When(subject, entries)
     }
 
     private fun parseLocal(mutable: Boolean): Stmt {
