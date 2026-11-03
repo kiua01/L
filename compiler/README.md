@@ -1,29 +1,25 @@
-# L Compiler Prototype 0.0.12
+# L Compiler Prototype 0.0.13
 
-## Highlights
+## New
 
-- Dual vocabulary (`fn`/`ret`/`let`/`obj` …)
-- Multiple functions + calls
-- **`object` / `class` members → separate `.class` files**
-- Minecraft DSL analysis stub (registries / entities / packets detection)
-- String concat, println, control flow
+- **Static fields** on `object` / `class` (`let`/`mut` / `val`/`var`)
+- Field init via `<clinit>`
+- `getstatic` / `putstatic` for field access inside methods
 
-## Object example
+## Example
 
 ```l
-obj Util {
-    fn double(x: Int): Int {
-        ret x + x
+obj Counter {
+    mut count = 0
+    fn bump(): Int {
+        count = count + 1
+        ret count
     }
 }
-
-fn main() {
-    println("ok")
-}
 ```
-
-Produces `Main.class` and `Util.class`.
 
 ```bash
-./gradlew :compiler:run --args="compile examples/hello/Objects.L out Main"
+./gradlew :compiler:run --args="compile examples/hello/Fields.L out Main"
 ```
+
+Also: dual vocabulary, multi-function, string `+`, Minecraft DSL stub.
