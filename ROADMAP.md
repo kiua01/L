@@ -2,15 +2,14 @@
 
 ## Phase 0 — Vision & Design ✅ COMPLETE
 
-## Phase 2 — Compiler Prototype 🚧 0.0.11
-- [x] Front-end pipeline
-- [x] if / while / when
+## Phase 2 — Compiler Prototype 🚧 0.0.12
+- [x] Dual vocabulary (full + abbreviated English)
 - [x] Multi-function JVM codegen
-- [x] **Dual vocabulary** (full English + modern abbreviated)
-- [x] Gradle wrapper
-- [ ] Classes / objects in bytecode
+- [x] Object/class → separate class files
+- [x] Minecraft DSL analysis stub
+- [ ] Instance methods / fields
 - [ ] StackMapTable + modern class version
-- [ ] Minecraft DSL lowering
+- [ ] Real Fabric/NeoForge emission
 
 ## Later
-Minecraft modules, cross-edition, UI, 3D, web, tooling
+Cross-edition, UI, 3D, web, tooling
