@@ -41,24 +41,17 @@ class Parser(
         while (check(TokenType.AT)) annotations += parseAnnotation()
 
         val modifiers = mutableListOf<String>()
-        while (isModifier(peek().type) && !check(TokenType.DATA) && !check(TokenType.SEALED) && !check(TokenType.VALUE)) {
-            modifiers += advance().lexeme
-        }
-        // allow data/sealed/value as leading modifiers too
-        while (check(TokenType.DATA) || check(TokenType.SEALED) || check(TokenType.VALUE) ||
-            check(TokenType.INLINE) || check(TokenType.SUSPEND) || check(TokenType.EXPECT) ||
-            check(TokenType.ACTUAL) || check(TokenType.OVERRIDE) || check(TokenType.OPEN) ||
-            check(TokenType.ABSTRACT) || check(TokenType.FINAL) ||
-            check(TokenType.PRIVATE) || check(TokenType.PROTECTED) || check(TokenType.PUBLIC) ||
-            check(TokenType.INTERNAL)
+        while (check(TokenType.PRIVATE) || check(TokenType.PROTECTED) || check(TokenType.PUBLIC) ||
+            check(TokenType.INTERNAL) || check(TokenType.OPEN) || check(TokenType.ABSTRACT) ||
+            check(TokenType.FINAL) || check(TokenType.OVERRIDE) || check(TokenType.INLINE) ||
+            check(TokenType.SUSPEND) || check(TokenType.EXPECT) || check(TokenType.ACTUAL) ||
+            check(TokenType.VALUE)
         ) {
-            if (check(TokenType.DATA) || check(TokenType.SEALED)) break
             modifiers += advance().lexeme
         }
 
         return when {
-            match(TokenType.FUN) || (modifiers.contains("suspend") && match(TokenType.FUN)) ->
-                parseFunction(annotations, modifiers)
+            match(TokenType.FUN) -> parseFunction(annotations, modifiers)
             match(TokenType.VAL) -> parseProperty(false, modifiers)
             match(TokenType.VAR) -> parseProperty(true, modifiers)
             match(TokenType.CLASS) -> parseClassLike("class", annotations, modifiers)
@@ -158,18 +151,42 @@ class Parser(
         return stmts
     }
 
+    private fun parseBlock(): List<Stmt> {
+        expect(TokenType.LBRACE, "{")
+        return parseStatementsUntil(TokenType.RBRACE)
+    }
+
     private fun parseStatement(): Stmt {
         when {
             match(TokenType.RETURN) -> {
-                val expr = if (!check(TokenType.RBRACE) && !check(TokenType.SEMICOLON) && !isAtEnd())
-                    parseExpression() else null
+                val expr = if (!check(TokenType.RBRACE) && !check(TokenType.SEMICOLON) &&
+                    !check(TokenType.ELSE) && !isAtEnd()
+                ) parseExpression() else null
                 match(TokenType.SEMICOLON)
                 return Stmt.Return(expr)
             }
             match(TokenType.VAL) -> return parseLocal(false)
             match(TokenType.VAR) -> return parseLocal(true)
+            match(TokenType.IF) -> {
+                expect(TokenType.LPAREN, "(")
+                val cond = parseExpression()
+                expect(TokenType.RPAREN, ")")
+                val thenBranch = if (check(TokenType.LBRACE)) parseBlock() else listOf(parseStatement())
+                val elseBranch = if (match(TokenType.ELSE)) {
+                    if (check(TokenType.LBRACE)) parseBlock() else listOf(parseStatement())
+                } else null
+                return Stmt.If(cond, thenBranch, elseBranch)
+            }
+            match(TokenType.WHILE) -> {
+                expect(TokenType.LPAREN, "(")
+                val cond = parseExpression()
+                expect(TokenType.RPAREN, ")")
+                val body = if (check(TokenType.LBRACE)) parseBlock() else listOf(parseStatement())
+                return Stmt.While(cond, body)
+            }
             else -> {
-                if (isDeclarationStart() || check(TokenType.RBRACE) || check(TokenType.EOF)) return Stmt.Empty
+                if (isDeclarationStart() || check(TokenType.RBRACE) || check(TokenType.EOF) || check(TokenType.ELSE))
+                    return Stmt.Empty
                 val expr = parseExpression()
                 match(TokenType.SEMICOLON)
                 return Stmt.ExprStmt(expr)
@@ -186,33 +203,23 @@ class Parser(
         return Stmt.LocalVar(mutable, name, type, init)
     }
 
-    // Pratt-style-ish expression parsing (precedence climbing via nested functions)
     private fun parseExpression(): Expr = parseAssignment()
 
     private fun parseAssignment(): Expr {
         val expr = parseOr()
-        if (match(TokenType.ASSIGN)) {
-            val value = parseAssignment()
-            return Expr.Assign(expr, value)
-        }
+        if (match(TokenType.ASSIGN)) return Expr.Assign(expr, parseAssignment())
         return expr
     }
 
     private fun parseOr(): Expr {
         var expr = parseAnd()
-        while (match(TokenType.OROR)) {
-            val right = parseAnd()
-            expr = Expr.Binary(expr, "||", right)
-        }
+        while (match(TokenType.OROR)) expr = Expr.Binary(expr, "||", parseAnd())
         return expr
     }
 
     private fun parseAnd(): Expr {
         var expr = parseEquality()
-        while (match(TokenType.ANDAND)) {
-            val right = parseEquality()
-            expr = Expr.Binary(expr, "&&", right)
-        }
+        while (match(TokenType.ANDAND)) expr = Expr.Binary(expr, "&&", parseEquality())
         return expr
     }
 
@@ -296,10 +303,7 @@ class Parser(
                     expect(TokenType.RPAREN, ")")
                     expr = Expr.Call(expr, args)
                 }
-                match(TokenType.DOT) -> {
-                    val name = consumeIdentifier()
-                    expr = Expr.Member(expr, name)
-                }
+                match(TokenType.DOT) -> expr = Expr.Member(expr, consumeIdentifier())
                 match(TokenType.LBRACKET) -> {
                     val index = parseExpression()
                     expect(TokenType.RBRACKET, "]")
@@ -311,26 +315,24 @@ class Parser(
         return expr
     }
 
-    private fun parsePrimary(): Expr {
-        return when {
-            match(TokenType.INT) -> Expr.Literal(previous().lexeme, LitKind.INT)
-            match(TokenType.FLOAT) -> Expr.Literal(previous().lexeme, LitKind.FLOAT)
-            match(TokenType.STRING) -> Expr.Literal(previous().lexeme, LitKind.STRING)
-            match(TokenType.CHAR) -> Expr.Literal(previous().lexeme, LitKind.CHAR)
-            match(TokenType.TRUE) -> Expr.Literal("true", LitKind.BOOL)
-            match(TokenType.FALSE) -> Expr.Literal("false", LitKind.BOOL)
-            match(TokenType.NULL) -> Expr.Literal("null", LitKind.NULL)
-            match(TokenType.IDENTIFIER) || checkSoftIdent() -> Expr.Ident(advance().lexeme)
-            match(TokenType.LPAREN) -> {
-                val e = parseExpression()
-                expect(TokenType.RPAREN, ")")
-                e
-            }
-            else -> {
-                diagnostics.error("Expected expression", peek().pos)
-                advance()
-                Expr.Unknown
-            }
+    private fun parsePrimary(): Expr = when {
+        match(TokenType.INT) -> Expr.Literal(previous().lexeme, LitKind.INT)
+        match(TokenType.FLOAT) -> Expr.Literal(previous().lexeme, LitKind.FLOAT)
+        match(TokenType.STRING) -> Expr.Literal(previous().lexeme, LitKind.STRING)
+        match(TokenType.CHAR) -> Expr.Literal(previous().lexeme, LitKind.CHAR)
+        match(TokenType.TRUE) -> Expr.Literal("true", LitKind.BOOL)
+        match(TokenType.FALSE) -> Expr.Literal("false", LitKind.BOOL)
+        match(TokenType.NULL) -> Expr.Literal("null", LitKind.NULL)
+        match(TokenType.IDENTIFIER) || checkSoftIdent() -> Expr.Ident(advance().lexeme)
+        match(TokenType.LPAREN) -> {
+            val e = parseExpression()
+            expect(TokenType.RPAREN, ")")
+            e
+        }
+        else -> {
+            diagnostics.error("Expected expression", peek().pos)
+            advance()
+            Expr.Unknown
         }
     }
 
@@ -411,7 +413,7 @@ class Parser(
 
     private fun consumeIdentifier(): String {
         val t = peek()
-        if (t.type == TokenType.IDENTIFIER || checkSoftIdent() || t.lexeme.isNotEmpty() && t.type != TokenType.EOF) {
+        if (t.type == TokenType.IDENTIFIER || checkSoftIdent() || (t.lexeme.isNotEmpty() && t.type != TokenType.EOF)) {
             advance()
             return t.lexeme
         }
