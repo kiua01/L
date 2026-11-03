@@ -1,18 +1,21 @@
 # L
 
-**L** is a modern programming language purpose-built for the Minecraft ecosystem.
+**L** is a modern programming language purpose-built for the Minecraft ecosystem — and beyond.
 
-It is designed from the ground up for:
+It is designed for:
 - Minecraft Java Edition modding (Fabric, Forge, NeoForge, Quilt, etc.)
 - High-performance Minecraft launchers (PC + Android)
 - **Bidirectional porting** between Bedrock Add-ons and Java Edition Mods
 - Modern, beautiful launcher and tool user interfaces
-- Cross-platform game tooling
-- Seamless interop with existing Java/Kotlin Minecraft codebases
+- **First-class 3D** (tools, viewers, games, web)
+- **Websites and 3D websites**
+- Seamless interop with existing Java/Kotlin codebases
 
-L has **full feature parity with Kotlin** while adding Minecraft-first ergonomics and powerful new capabilities.
+L has **full feature parity with Kotlin** while adding powerful domain capabilities.
 
-**One language. One extension (`.L`). Everything.**
+**One language. Two extensions:**
+- **`.L`** — mods, launchers, logic, desktop/mobile UI
+- **`.le`** — websites and web 3D
 
 > Status: **Design / Early Specification** stage.
 
@@ -20,18 +23,13 @@ L has **full feature parity with Kotlin** while adding Minecraft-first ergonomic
 
 ## Major Features
 
-### 1. Minecraft Java Modding & Launchers
-Write mods and launchers with modern language features, excellent concurrency, and first-class Android support for Java Edition launchers.
-
-### 2. Cross-Edition Portability
-**Port any Bedrock Add-on to a Java Edition mod**  
-**Port any Java Edition mod to a Bedrock Add-on**
-
-### 3. Modern UI (Built into L)
-Create very modern, beautiful, fluid interfaces for launchers and tools — all in the same language.
-
-### 4. Single File Extension
-All L source files use **`.L`**.
+| Feature | Description |
+|---------|-------------|
+| Java Modding & Launchers | Modern language + strong concurrency + Android support |
+| Cross-Edition Portability | Bedrock Add-on ↔ Java Mod |
+| Modern UI | Declarative UI built into L |
+| First-class 3D | Scenes, models, cameras, lights, animation |
+| Websites & 3D Websites | Modern web + real-time 3D on the web (`.le`) |
 
 ---
 
@@ -40,13 +38,14 @@ All L source files use **`.L`**.
 | Document | Description |
 |----------|-------------|
 | [Goals](docs/GOALS.md) | Primary goals and non-goals |
-| [Features](docs/FEATURES.md) | Cross-edition portability + modern UI |
+| [Features](docs/FEATURES.md) | All major capabilities |
+| [3D & Web](docs/WEB_AND_3D.md) | 3D, websites, 3D websites, `.le` extension |
 | [Specification](docs/SPEC.md) | Early language specification draft |
-| [Type System](docs/TYPE_SYSTEM.md) | Detailed type system outline |
-| [Standard Library](docs/STDLIB.md) | Core, Minecraft, Launcher, and UI modules |
+| [Type System](docs/TYPE_SYSTEM.md) | Type system outline |
+| [Standard Library](docs/STDLIB.md) | Core, Minecraft, Launcher, UI, Graphics modules |
 | [Minecraft DSL](docs/MINECRAFT_DSL.md) | Registries, entities, events, packets, datagen |
 | [UI Module](docs/UI.md) | Declarative UI, state, layout, animation |
-| [Syntax](docs/SYNTAX.md) | Kotlin parity + Minecraft DSL vision |
+| [Syntax](docs/SYNTAX.md) | Kotlin parity + DSLs |
 | [Grammar](docs/GRAMMAR.md) | Formal grammar sketch |
 | [Compiler](docs/COMPILER.md) | Compiler architecture notes |
 | [Roadmap](ROADMAP.md) | Development phases |
@@ -54,100 +53,48 @@ All L source files use **`.L`**.
 
 ---
 
-## Why L?
+## File Extensions
 
-| Goal | How L helps |
-|------|-------------|
-| Kotlin familiarity | 100% Kotlin syntax & feature set as baseline |
-| Minecraft modding | Built-in DSL support for registries, events, data generation, networking |
-| Launchers | Excellent concurrency + modern UI capabilities |
-| Android Java Edition launchers | First-class Android target |
-| Bedrock ↔ Java porting | Unified model that can target both editions |
-| Modern UI | Declarative UI built directly into the language |
-| One language | Everything uses `.L` |
+| Extension | Used for |
+|-----------|----------|
+| `.L` | Mods, launchers, general logic, desktop/mobile UI |
+| `.le` | Websites and web 3D |
 
----
-
-## Core Design Principles
-
-1. **Kotlin-first** — Full feature parity with Kotlin  
-2. **Minecraft-native** — Registries, events, networking, datagen DSLs  
-3. **Cross-edition** — One model, multiple targets (Java + Bedrock)  
-4. **Modern UI** — Beautiful interfaces written in the same language  
-5. **Performance** — Low-allocation APIs for game loops and launchers  
-6. **Multiplatform** — JVM + Android (+ future Native)  
-7. **Excellent interop** — Seamless with existing Java/Kotlin libraries  
-8. **One language, one extension** — `.L` for everything  
+```
+Main.L                 // mod or launcher
+HomeScreen.L           // desktop / Android UI
+RobotEntity.L          // cross-edition entity
+HomePage.le            // website page
+ProductViewer3D.le     // 3D on the web
+```
 
 ---
 
 ## Examples
 
-All examples use the **`.L`** extension:
-
-- [`simple-mod`](examples/simple-mod/) — Basic Fabric-style mod
-- [`launcher-core`](examples/launcher-core/) — Shared launcher logic (PC + Android)
-- [`launcher-ui`](examples/launcher-ui/) — Modern launcher UI
-- [`cross-edition`](examples/cross-edition/) — Entity that targets Java + Bedrock
-
----
-
-## Project Structure
-
-```
-L/
-├── README.md
-├── ROADMAP.md
-├── CONTRIBUTING.md
-├── LICENSE
-├── docs/
-│   ├── GOALS.md
-│   ├── FEATURES.md
-│   ├── SPEC.md
-│   ├── TYPE_SYSTEM.md
-│   ├── STDLIB.md
-│   ├── MINECRAFT_DSL.md
-│   ├── UI.md
-│   ├── SYNTAX.md
-│   ├── GRAMMAR.md
-│   └── COMPILER.md
-└── examples/
-    ├── simple-mod/
-    ├── launcher-core/
-    ├── launcher-ui/
-    └── cross-edition/
-```
+- [`simple-mod`](examples/simple-mod/) — Basic mod (`.L`)
+- [`launcher-core`](examples/launcher-core/) — Shared launcher logic (`.L`)
+- [`launcher-ui`](examples/launcher-ui/) — Modern launcher UI (`.L`)
+- [`cross-edition`](examples/cross-edition/) — Java + Bedrock entity (`.L`)
+- [`website`](examples/website/) — Website + 3D viewer (`.le`)
 
 ---
 
 ## Current Status
 
 - [x] Language vision & goals
-- [x] High-level specification draft
-- [x] Syntax overview + Minecraft DSL vision
-- [x] Formal grammar sketch
-- [x] Compiler architecture notes
-- [x] Type system outline
-- [x] Standard library outline
+- [x] Specification, type system, grammar, compiler notes
 - [x] Minecraft DSL design
 - [x] UI module specification
+- [x] Standard library outline
 - [x] Cross-edition portability vision
-- [x] Modern UI capabilities (built into L)
-- [x] Single `.L` file extension decision
-- [x] Roadmap
+- [x] First-class 3D vision
+- [x] Websites & 3D websites vision
+- [x] `.L` and `.le` extension decision
 - [x] Example sketches
 - [ ] Compiler prototype
-- [ ] Minecraft DSL prototypes
-- [ ] UI module prototype
+- [ ] Runtime prototypes (Minecraft, UI, 3D, Web)
 - [ ] Tooling (LSP, formatter, build plugin)
-
----
-
-## Contributing
-
-This project is in very early stages. Feedback on the language design, Minecraft ergonomics, cross-edition porting, and modern UI needs is highly welcome.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -157,5 +104,4 @@ MIT License — see [LICENSE](LICENSE).
 
 ---
 
-**L** — One language for the entire Minecraft creator and launcher ecosystem.  
-**Everything ends with `.L`**
+**L** — One language for mods, launchers, UI, 3D, websites, and 3D websites.
