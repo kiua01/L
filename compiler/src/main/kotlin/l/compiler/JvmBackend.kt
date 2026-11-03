@@ -36,6 +36,7 @@ class JvmBackend {
 internal class CodeGen {
     private val code = mutableListOf<Int>()
     private val locals = linkedMapOf<String, Int>()
+    private val localTypes = linkedMapOf<String, String>() // Int or Boolean
     private var nextLocal = 1
     private val labels = mutableListOf<Label>()
     val prints = mutableListOf<PrintSite>()
@@ -409,7 +410,7 @@ internal class ClassFile(private val className: String) {
         val out = DataOutputStream(baos)
         out.writeInt(0xCAFEBABE.toInt())
         out.writeShort(0)
-        out.writeShort(52)
+        out.writeShort(49) // Java 5 — no StackMapTable required
         p.write(out)
         out.writeShort(0x0001)
         out.writeShort(thisC)
