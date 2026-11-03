@@ -15,6 +15,18 @@ L has **full feature parity with Kotlin** while adding Minecraft-first ergonomic
 
 ---
 
+## Quick Links
+
+| Document | Description |
+|----------|-------------|
+| [Goals](docs/GOALS.md) | Primary goals and non-goals |
+| [Specification](docs/SPEC.md) | Early language specification draft |
+| [Syntax](docs/SYNTAX.md) | Kotlin parity + Minecraft DSL vision |
+| [Roadmap](ROADMAP.md) | Development phases |
+| [Contributing](CONTRIBUTING.md) | How to contribute |
+
+---
+
 ## Why L?
 
 Minecraft modding and launcher development currently live in a mix of Java, Kotlin, and sometimes Groovy. L aims to be the dedicated language for this domain:
@@ -58,87 +70,30 @@ Minecraft modding and launcher development currently live in a mix of Java, Kotl
 
 ---
 
-## Language Features (Kotlin Parity + Extensions)
+## Examples
 
-### Inherited from Kotlin
-- Null safety (`?`, `!!`, smart casts)
-- Data classes, sealed classes/interfaces
-- Coroutines & structured concurrency
-- Extension functions
-- Delegation
-- Inline / value classes
-- Context receivers / parameters
-- Multiplatform project structure
-- Type-safe builders / DSLs
-- All standard library collections, sequences, flows, etc.
+See the [`examples/`](examples/) directory:
 
-### L-specific / Minecraft-oriented additions (planned)
-
-```l
-// Example vision (not final syntax)
-
-@Mod("mymod")
-class MyMod {
-    // First-class registry DSL
-    val blocks = registry<Block> {
-        "cool_block" {
-            material = Material.STONE
-            hardness = 2.0f
-            // ...
-        }
-    }
-
-    // Event handling with structured concurrency
-    on<ServerTickEvent> {
-        // low-allocation hot path
-    }
-
-    // Easy networking
-    packet<MyPacket> {
-        // codec + handler
-    }
-}
-```
-
-Other planned ergonomics:
-- Compile-time checked resource locations / identifiers
-- Built-in support for data generators
-- Lightweight entity component system helpers
-- Launcher-oriented modules (`l.launcher`, `l.android`, `l.auth`, etc.)
+- [`simple-mod`](examples/simple-mod/) — Vision of a basic Fabric-style mod
+- [`launcher-core`](examples/launcher-core/) — Shared launcher logic for PC + Android
 
 ---
 
-## Target Use Cases
-
-1. **Minecraft Mods**  
-   Write mods with cleaner, safer, more expressive code while still compiling to normal JVM bytecode that works with Fabric/Forge/etc.
-
-2. **Minecraft Launchers (PC)**  
-   Build modern launchers with excellent concurrency, UI (Compose Multiplatform or similar), and easy management of multiple instances / versions.
-
-3. **Minecraft Java Edition Launchers for Android**  
-   L is designed so the same core launcher logic can target both desktop JVM and Android, making high-quality Java Edition mobile launchers much more maintainable.
-
----
-
-## Project Structure (planned)
+## Project Structure
 
 ```
 L/
-├── spec/                 # Language specification
-├── compiler/             # L compiler (front-end + backend)
-├── stdlib/               # Standard library
-├── minecraft/            # Minecraft-specific standard modules
-│   ├── registry/
-│   ├── events/
-│   ├── networking/
-│   └── datagen/
-├── launcher/             # Launcher-oriented libraries
-├── examples/
-│   ├── simple-mod/
-│   ├── fabric-mod/
-│   └── android-launcher/
-└── docs/
+├── README.md
+├── ROADMAP.md
+├── CONTRIBUTING.md
+├── LICENSE
+├── docs/
+│   ├── GOALS.md
+│   ├── SPEC.md
+│   └── SYNTAX.md
+└── examples/
+    ├── simple-mod/
+    └── launcher-core/
 ```
 
 ---
@@ -146,6 +101,10 @@ L/
 ## Current Status
 
 - [x] Language vision & goals
+- [x] High-level specification draft
+- [x] Syntax overview + Minecraft DSL vision
+- [x] Roadmap
+- [x] Example sketches
 - [ ] Formal grammar
 - [ ] Core type system specification
 - [ ] Compiler prototype
@@ -159,17 +118,13 @@ L/
 
 This project is in very early stages. Feedback on the language design, Minecraft ergonomics, and launcher needs is highly welcome.
 
-Open issues or discussions for:
-- Feature requests related to modding / launchers
-- Kotlin feature gaps you care about
-- Performance requirements
-- Android launcher constraints
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 ## License
 
-To be decided (likely Apache 2.0 or similar permissive license).
+MIT License — see [LICENSE](LICENSE).
 
 ---
 
