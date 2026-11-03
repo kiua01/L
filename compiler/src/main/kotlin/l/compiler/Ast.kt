@@ -68,8 +68,17 @@ sealed class Stmt {
     data class LocalVar(val mutable: Boolean, val name: String, val type: String?, val init: Expr?) : Stmt()
     data class If(val condition: Expr, val thenBranch: List<Stmt>, val elseBranch: List<Stmt>?) : Stmt()
     data class While(val condition: Expr, val body: List<Stmt>) : Stmt()
+    data class When(
+        val subject: Expr?,
+        val entries: List<WhenEntry>
+    ) : Stmt()
     data object Empty : Stmt()
 }
+
+data class WhenEntry(
+    val conditions: List<Expr>?, // null = else
+    val body: List<Stmt>
+)
 
 sealed class Expr {
     data class Literal(val value: String, val kind: LitKind) : Expr()
