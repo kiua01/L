@@ -55,10 +55,7 @@ sealed class Decl : AstNode() {
     ) : Decl()
 }
 
-data class Param(
-    val name: String,
-    val type: String?
-)
+data class Param(val name: String, val type: String?)
 
 sealed class Body {
     data class Block(val statements: List<Stmt>) : Body()
@@ -69,6 +66,8 @@ sealed class Stmt {
     data class ExprStmt(val expr: Expr) : Stmt()
     data class Return(val expr: Expr?) : Stmt()
     data class LocalVar(val mutable: Boolean, val name: String, val type: String?, val init: Expr?) : Stmt()
+    data class If(val condition: Expr, val thenBranch: List<Stmt>, val elseBranch: List<Stmt>?) : Stmt()
+    data class While(val condition: Expr, val body: List<Stmt>) : Stmt()
     data object Empty : Stmt()
 }
 
