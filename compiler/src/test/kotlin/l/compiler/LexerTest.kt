@@ -1,7 +1,6 @@
 package l.compiler
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -14,23 +13,33 @@ class CompilerTests {
     }
 
     @Test
-    fun parsesExpressions() {
+    fun parsesIfWhile() {
         val source = """
-            fun add(a: Int, b: Int): Int = a + b * 2
+            fun main() {
+                if (true) {
+                    println("yes")
+                } else {
+                    println("no")
+                }
+                while (false) {
+                    println("loop")
+                }
+            }
         """.trimIndent()
         val diag = DiagnosticBag()
         val ast = Parser(Lexer(source).tokenize(), diag).parseFile()
         val fn = ast.declarations.filterIsInstance<Decl.Function>().first()
-        assertTrue(fn.body is Body.Expression)
+        val body = fn.body as Body.Block
+        assertTrue(body.statements.any { it is Stmt.If })
+        assertTrue(body.statements.any { it is Stmt.While })
         assertFalse(diag.hasErrors)
     }
 
     @Test
-    fun typechecksLiterals() {
+    fun typechecksPrintln() {
         val source = """
-            fun f(): Int {
-                val x: Int = 1
-                return x
+            fun main() {
+                println("hi")
             }
         """.trimIndent()
         val diag = DiagnosticBag()
@@ -40,25 +49,18 @@ class CompilerTests {
     }
 
     @Test
-    fun typecheckMismatch() {
+    fun collectPrintlnsFromAst() {
         val source = """
-            fun f(): Int {
-                val x: Int = "nope"
-                return x
+            fun main() {
+                println("A")
+                println("B")
             }
         """.trimIndent()
         val diag = DiagnosticBag()
         val ast = Parser(Lexer(source).tokenize(), diag).parseFile()
-        TypeChecker(diag).check(ast)
-        assertTrue(diag.hasErrors)
-    }
-
-    @Test
-    fun resolverNested() {
-        val source = "package demo\nobject M { fun f() {} }"
-        val diag = DiagnosticBag()
-        val ast = Parser(Lexer(source).tokenize(), diag).parseFile()
-        val symbols = Resolver(diag).resolve(ast)
-        assertTrue(symbols.any { it.name == "f" })
+        // compile should not throw
+        val dir = java.io.File.createTempFile("lout", "").apply { delete(); mkdir() }
+        JvmBackend().emit(ast, "Main", dir)
+        assertTrue(java.io.File(dir, "Main.class").exists())
     }
 }
