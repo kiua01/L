@@ -6,10 +6,11 @@
 - [x] Formal grammar sketch
 - [x] Compiler architecture notes
 - [x] Cross-edition portability vision (Bedrock ↔ Java)
-- [x] Lume UI language vision
+- [x] Modern UI capabilities (built into L)
+- [x] Single language + `.L` file extension decision
 - [ ] Core type system outline (detailed)
 - [ ] Minecraft DSL requirements gathering (deeper)
-- [ ] Launcher requirements (PC + Android)
+- [ ] Launcher + UI requirements (PC + Android)
 
 ## Phase 1 — Specification
 - [ ] Complete language specification (syntax + semantics)
@@ -17,11 +18,11 @@
 - [ ] Interop rules with Java & Kotlin
 - [ ] Multiplatform target design (JVM primary, Android secondary)
 - [ ] Cross-edition capability mapping design
-- [ ] Lume language specification (derived from L)
+- [ ] UI module specification (declarative components, reactivity, animation)
 - [ ] Error handling and diagnostics design
 
 ## Phase 2 — Compiler Prototype
-- [ ] Lexer + Parser
+- [ ] Lexer + Parser (`.L` files)
 - [ ] Name resolution & type checking (subset)
 - [ ] JVM bytecode backend (basic)
 - [ ] Simple standard library subset
@@ -41,15 +42,15 @@
 - [ ] Capability mapping & diagnostics
 - [ ] First successful bidirectional port examples
 
-## Phase 5 — Launcher Support + Lume
+## Phase 5 — Launcher Support + Modern UI
 - [ ] `l.launcher` module
 - [ ] Android target improvements
-- [ ] Lume compiler / frontend prototype
-- [ ] Example PC launcher with modern Lume UI
-- [ ] Example Android Java Edition launcher with Lume UI
+- [ ] UI module prototype (declarative, reactive)
+- [ ] Example PC launcher with modern L UI
+- [ ] Example Android Java Edition launcher with modern L UI
 
 ## Phase 6 — Tooling & Ecosystem
-- [ ] Language Server Protocol (LSP) for L and Lume
+- [ ] Language Server Protocol (LSP)
 - [ ] Formatter
 - [ ] Build system plugin (Gradle)
 - [ ] Documentation site
@@ -60,4 +61,4 @@
 - Advanced performance features for tick loops
 - Community-driven Minecraft libraries
 - Mature Bedrock ↔ Java porting tooling
-- Rich Lume component ecosystem
+- Rich UI component ecosystem
