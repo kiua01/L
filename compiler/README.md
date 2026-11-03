@@ -1,40 +1,22 @@
-# L Compiler Prototype 0.0.7
+# L Compiler Prototype 0.0.8
 
-## Status
+## Codegen support
 
-| Component | Status |
-|-----------|--------|
-| Front-end | Lexer, parser (`if`/`while`/`when`), diagnostics, resolver, type checker |
-| Pipeline | `CompilerPipeline` shared by CLI |
-| JVM backend | println, Int locals, arithmetic, if/while/when |
-| Classfile | Java 5 (v49) — runs without StackMapTable |
+- `fun main()`
+- Int / **Boolean** / **String** locals
+- Arithmetic & comparisons on Int
+- `&&` / `||` / `!` on Boolean (as 0/1)
+- `println` for strings, ints, and locals
+- `if` / `while` / `when`
 
-## Build & run
+## Run
 
 ```bash
-chmod +x gradlew
 ./gradlew :compiler:test
 ./gradlew :compiler:run --args="compile examples/hello/Hello.L out Main"
 java -cp out Main
 ```
 
-If `./gradlew` is not executable yet:
+## Notes
 
-```bash
-gradle wrapper   # optional, regenerates wrapper
-gradle :compiler:run --args="version"
-```
-
-## Supported surface (codegen)
-
-- `fun main() { ... }`
-- `val` / `var` Int locals
-- `+ - * /` and comparisons
-- `println(String|Int|local)`
-- `if` / `else`, `while`, `when` (int subject)
-
-## Next
-
-- More types (Boolean locals, String values)
-- StackMapTable + modern class version
-- Better errors
+Classfiles are Java 5 (v49) so StackMapTable is not required.
