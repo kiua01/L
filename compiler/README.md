@@ -1,25 +1,21 @@
-# L Compiler Prototype 0.0.13
+# L Compiler Prototype 0.0.14
 
-## New
+## Minecraft target
 
-- **Static fields** on `object` / `class` (`let`/`mut` / `val`/`var`)
-- Field init via `<clinit>`
-- `getstatic` / `putstatic` for field access inside methods
+**Fabric only** for now.
 
-## Example
+A new mod loader **Bear** is planned **after** the Fabric path is usable.
 
-```l
-obj Counter {
-    mut count = 0
-    fn bump(): Int {
-        count = count + 1
-        ret count
-    }
-}
-```
+## Commands
 
 ```bash
-./gradlew :compiler:run --args="compile examples/hello/Fields.L out Main"
+./gradlew :compiler:run --args="compile examples/fabric/HelloFabric.L out Main"
+./gradlew :compiler:run --args="fabric-json hellofabric HelloFabric out HelloFabric"
 ```
 
-Also: dual vocabulary, multi-function, string `+`, Minecraft DSL stub.
+## Features
+
+- Dual vocabulary (`fn`/`ret`/`let`/`obj` …)
+- Multi-function + static fields on objects
+- `fabric.mod.json` generator
+- Fabric-oriented DSL analysis stub
