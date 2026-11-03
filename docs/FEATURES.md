@@ -7,158 +7,134 @@ One of the most ambitious goals of L is to make **bidirectional porting** betwee
 - Port any **Bedrock Add-on** → **Java Edition Mod**
 - Port any **Java Edition Mod** → **Bedrock Add-on**
 
-### Why this matters
+L provides a unified high-level model that can target both ecosystems, with clear diagnostics when features differ.
 
-Today these two ecosystems are almost completely separate:
-- Different languages (Java/Kotlin vs. JavaScript/JSON + Molang)
-- Different APIs, events, component systems, and packaging
-- Different performance and capability models
+---
 
-L aims to provide a **common high-level model** that can target both.
+## 2. Modern UI (Built into L)
 
-### Design Approach
+L includes first-class support for building **very modern**, beautiful, fluid interfaces for launchers and tools — all in the same language.
 
-```
-                ┌─────────────────────┐
-                │   L Source Code     │
-                │  (common model)     │
-                └─────────┬───────────┘
-                          │
-           ┌──────────────┼──────────────┐
-           ▼                             ▼
-┌─────────────────────┐       ┌─────────────────────┐
-│  Java Edition        │       │  Bedrock Edition     │
-│  Backend             │       │  Backend             │
-│  (Fabric/Forge/etc.) │       │  (Add-on / Behavior  │
-│                      │       │   + Resource Packs)  │
-└─────────────────────┘       └─────────────────────┘
-```
+- Declarative & reactive
+- Excellent desktop + Android support
+- Deep integration with the rest of L
 
-### Key Ideas
+---
 
-1. **Unified Entity / Block / Item Model**  
-   L provides high-level abstractions for components, events, and behaviors that can be lowered to either:
-   - Java classes + mixins / events, or
-   - Bedrock component JSON + Molang + scripts
+## 3. First-Class 3D
 
-2. **Behavior Description Language**  
-   Developers describe *what* something does, not *how* it is implemented on a specific edition.
+L is designed to be **very good at 3D**.
 
-3. **Capability Mapping Layer**  
-   Not every feature exists on both sides. L will:
-   - Provide clear diagnostics when a feature cannot be fully ported
-   - Offer polyfills / approximations where possible
-   - Allow edition-specific `actual` implementations (similar to multiplatform)
+This covers:
 
-4. **Asset & Data Pipeline**  
-   Shared data generation that can emit:
-   - Java data packs + assets
-   - Bedrock behavior + resource packs
+- 3D for games and tools
+- 3D scenes inside launchers
+- 3D on the web (3D websites)
+- Real-time rendering, models, cameras, lights, materials, animations
+
+### Goals
+
+- High-level, productive 3D APIs
+- Good performance for real-time use
+- Same language for logic + 3D + UI
+- Works on desktop, Android, and the web
 
 ### Example Vision
 
 ```l
-// This entity definition can target both editions
-entity("demo:robot") {
-    components {
-        health(20)
-        movement(0.25)
-        attack(damage = 3)
-    }
-
-    events {
-        onInteract { player ->
-            player.sendMessage("Hello from L!")
-            spawnParticle("demo:spark", position)
-        }
-    }
-}
-```
-
-The same source could produce a Java mod *and* a Bedrock add-on.
-
----
-
-## 2. Modern UI Capabilities (Built into L)
-
-L is **one language for everything** — including modern user interfaces for launchers and tools.
-
-There is **no separate UI language**. UI features are a first-class part of L itself.
-
-### Goals
-
-- Create **very modern**, beautiful, fluid interfaces
-- First-class support for desktop *and* mobile (especially Android launchers)
-- Excellent performance and smooth animations
-- Deep integration with the rest of L (shared types, easy calling of backend logic)
-- Compatible with modern UI paradigms (declarative, reactive, component-based)
-
-### How it works
-
-L includes a rich UI module and declarative syntax that compiles to modern UI targets:
-
-```
-L UI code  ──compiles to──►  Modern UI backends
-                              ├── Compose Multiplatform / Skia
-                              ├── Native Android (Jetpack Compose)
-                              ├── Desktop (Windows / macOS / Linux)
-                              └── (Future) Web / other
-```
-
-### Example Vision (UI in L)
-
-```l
 @Composable
-fun LauncherHome(state: LauncherState) {
-    Screen {
-        TopBar(title = "L Launcher")
+fun CharacterPreview(model: Model3D) {
+    Scene3D {
+        Camera(position = Vec3(0f, 1.5f, 4f), lookAt = Vec3.ZERO)
+        AmbientLight(intensity = 0.4f)
+        DirectionalLight(direction = Vec3(-1f, -1f, -0.5f))
 
-        InstanceGrid(
-            instances = state.instances,
-            onSelect = { instance -> state.launch(instance) }
+        Model(
+            source = model,
+            position = Vec3.ZERO,
+            onClick = { /* ... */ }
         )
-
-        FloatingActionButton(
-            onClick = { state.createNewInstance() }
-        ) {
-            Icon(Icons.Add)
-        }
     }
 }
 ```
 
-### Key UI Features Planned
-
-- Declarative component model
-- Fine-grained reactivity
-- Built-in animation and transition system
-- Design tokens / theming engine
-- Excellent Android + Desktop support out of the box
-- Hot reload for rapid UI development
-- Seamless calls into the rest of L code (game launching, instance management, downloads, etc.)
-
 ---
 
-## 3. File Extension
+## 4. Websites & 3D Websites
 
-**All L source files use the `.L` extension** (uppercase).
+L is also designed to be **very good for making websites**, including **3D websites**.
+
+### File Extension for Web
+
+**Website-related source files use the `.le` extension.**
+
+| Kind of code              | Extension |
+|---------------------------|-----------|
+| Mods, launchers, general  | `.L`      |
+| Websites & web 3D         | `.le`     |
 
 Examples:
-- `Main.L`          — mod entry point
-- `RobotEntity.L`   — cross-edition entity
-- `HomeScreen.L`    — modern launcher UI
-- `LauncherCore.L`  — shared launcher logic
+- `HomePage.le`
+- `ProductViewer3D.le`
+- `Main.L` (launcher or mod)
+- `RobotEntity.L`
 
-One language. One extension. Everything.
+### Web Capabilities
+
+- Modern, reactive web UIs
+- Component-based architecture (same spirit as the rest of L)
+- First-class **3D on the web** (WebGL / WebGPU style backends)
+- Shared logic between desktop/Android launchers and web experiences where it makes sense
+
+### Example Vision (Website)
+
+```le
+@page
+fun HomePage() {
+    Html {
+        Head { Title("My 3D Site") }
+        Body {
+            HeroSection()
+            ProductViewer3D(model = "/models/robot.glb")
+            Footer()
+        }
+    }
+}
+
+@Composable
+fun ProductViewer3D(model: String) {
+    Scene3D(modifier = Modifier.height(480.px)) {
+        Camera(...)
+        Model(source = model)
+    }
+}
+```
+
+---
+
+## 5. One Language Family
+
+| Area                        | How L helps                                      | Extension |
+|-----------------------------|--------------------------------------------------|-----------|
+| Java Edition mods           | DSLs, interop, performance                       | `.L`      |
+| Bedrock ↔ Java porting      | Unified model + backends                         | `.L`      |
+| Launchers (PC + Android)    | Shared logic + modern UI                         | `.L`      |
+| Modern desktop/mobile UI    | Declarative UI built into the language           | `.L`      |
+| 3D (games, tools, viewers)  | High-level 3D APIs                               | `.L` / `.le` |
+| Websites                    | Modern reactive web                              | `.le`     |
+| 3D websites                 | 3D scenes on the web                             | `.le`     |
+
+> **L — One language for mods, launchers, UI, 3D, websites, and 3D websites.**
 
 ---
 
 ## Summary
 
-| Feature                        | Description                                      | Status     |
-|--------------------------------|--------------------------------------------------|------------|
-| Cross-Edition Portability      | Bedrock Add-on ↔ Java Mod                        | Design     |
-| Modern UI (built into L)       | Beautiful launcher & tool interfaces             | Design     |
-| Single language + `.L` files   | One language for mods, launchers, UI, everything | Design     |
-
-> **L — One language for the entire Minecraft creator and launcher ecosystem.**
+| Feature                        | Status |
+|--------------------------------|--------|
+| Cross-Edition Portability      | Design |
+| Modern UI (built into L)       | Design |
+| First-class 3D                 | Design |
+| Websites + 3D websites         | Design |
+| `.L` for general code          | Decided |
+| `.le` for website code         | Decided |
