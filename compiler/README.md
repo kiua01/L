@@ -1,30 +1,31 @@
-# L Compiler Prototype 0.0.10
+# L Compiler Prototype 0.0.11
+
+## Dual vocabulary
+
+L accepts **normal English** and **modern abbreviated English** keywords:
+
+| Normal | Abbreviated |
+|--------|-------------|
+| `fun` / `function` | `fn` / `def` |
+| `val` | `let` |
+| `var` | `mut` |
+| `return` | `ret` |
+| `while` | `loop` |
+| `when` | `match` |
+| `package` | `pkg` |
+| `import` | `imp` |
+| `class` | `cls` |
+| `object` | `obj` |
+
+See [docs/LANGUAGE_STYLE.md](../docs/LANGUAGE_STYLE.md).
 
 ## Codegen
 
-- Multiple top-level functions → `public static` methods
-- Calls between functions (`invokestatic`)
-- Int / Boolean / String locals & params
+- Multiple functions + calls
+- Int / Boolean / String
 - String `+`, println, if / while / when
 
-## Example
-
-```l
-fun greet(name: String) {
-    println("Hello, " + name + "!")
-}
-
-fun add(a: Int, b: Int): Int {
-    return a + b
-}
-
-fun main() {
-    greet("L")
-    println(add(10, 32))
-}
-```
-
 ```bash
-./gradlew :compiler:run --args="compile examples/hello/Hello.L out Main"
+./gradlew :compiler:run --args="compile examples/hello/HelloAbbreviated.L out Main"
 java -cp out Main
 ```
