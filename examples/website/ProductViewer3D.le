@@ -1,0 +1,32 @@
+// examples/website/ProductViewer3D.le
+// 3D product viewer for websites (file ends with .le)
+
+@Composable
+fun ProductViewer3D(model: String) {
+    Scene3D(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(480.px)
+            .background(Color(0xFF0B0B0F))
+    ) {
+        Camera(
+            position = Vec3(0f, 1.2f, 3.5f),
+            lookAt = Vec3.ZERO,
+            fov = 45.degrees
+        )
+
+        AmbientLight(intensity = 0.35f)
+        DirectionalLight(
+            direction = Vec3(-1f, -1f, -0.8f),
+            intensity = 1.0f
+        )
+
+        Model(
+            source = model,
+            position = Vec3.ZERO,
+            onPointerDrag = { delta ->
+                // rotate the model interactively
+            }
+        )
+    }
+}
