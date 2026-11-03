@@ -6,15 +6,20 @@ import kotlin.test.assertTrue
 
 class CompilerTests {
     @Test
-    fun multipleFunctions() {
+    fun abbreviatedKeywords() {
         val source = """
-            fun add(a: Int, b: Int): Int {
-                return a + b
+            fn add(a: Int, b: Int): Int {
+                ret a + b
             }
-            fun main() {
-                println(add(2, 3))
+            fn main() {
+                let x = add(1, 2)
+                println(x)
             }
         """.trimIndent()
+        val tokens = Lexer(source).tokenize()
+        assertTrue(tokens.any { it.type == TokenType.FUN && it.lexeme == "fn" })
+        assertTrue(tokens.any { it.type == TokenType.RETURN && it.lexeme == "ret" })
+        assertTrue(tokens.any { it.type == TokenType.VAL && it.lexeme == "let" })
         val r = CompilerPipeline.analyze(source)
         assertFalse(r.diagnostics.hasErrors)
         val dir = java.io.File.createTempFile("lout", "").apply { delete(); mkdir() }
