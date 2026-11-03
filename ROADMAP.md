@@ -2,14 +2,15 @@
 
 ## Phase 0 — Vision & Design ✅ COMPLETE
 
-## Phase 2 — Compiler Prototype 🚧 0.0.12
-- [x] Dual vocabulary (full + abbreviated English)
-- [x] Multi-function JVM codegen
-- [x] Object/class → separate class files
+## Phase 2 — Compiler Prototype 🚧 0.0.13
+- [x] Dual vocabulary
+- [x] Multi-function + calls
+- [x] Object/class classfiles
+- [x] Static fields + clinit
 - [x] Minecraft DSL analysis stub
-- [ ] Instance methods / fields
+- [ ] True instance methods (`this`)
 - [ ] StackMapTable + modern class version
-- [ ] Real Fabric/NeoForge emission
+- [ ] Fabric/NeoForge emission
 
 ## Later
 Cross-edition, UI, 3D, web, tooling
