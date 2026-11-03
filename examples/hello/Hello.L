@@ -10,4 +10,9 @@ fun main() {
     } else {
         println("x >= y")
     }
+    when (x) {
+        10 -> println("x is 10")
+        20 -> println("x is 20")
+        else -> println("other")
+    }
 }
