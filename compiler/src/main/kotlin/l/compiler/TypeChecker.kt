@@ -89,6 +89,15 @@ class TypeChecker(private val diagnostics: DiagnosticBag) {
                 s.body.forEach { checkStmt(it, expectedReturn) }
                 pop()
             }
+            is Stmt.When -> {
+                s.subject?.let { infer(it) }
+                for (e in s.entries) {
+                    e.conditions?.forEach { infer(it) }
+                    push()
+                    e.body.forEach { checkStmt(it, expectedReturn) }
+                    pop()
+                }
+            }
             Stmt.Empty -> {}
         }
     }
