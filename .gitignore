@@ -1,0 +1,22 @@
+# Build
+build/
+out/
+dist/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# L specific (future)
+.l/
+l-cache/
