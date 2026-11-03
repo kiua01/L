@@ -2,15 +2,15 @@
 
 ## Phase 0 — Vision & Design ✅ COMPLETE
 
-## Phase 2 — Compiler Prototype 🚧 0.0.8
+## Phase 2 — Compiler Prototype 🚧 0.0.9
 - [x] Front-end pipeline
 - [x] if / while / when
-- [x] JVM: Int, Boolean, String locals
-- [x] JVM: arithmetic, println, control flow
+- [x] Int, Boolean, String locals
+- [x] String concatenation
 - [x] Gradle wrapper
-- [ ] String concatenation / methods
+- [ ] Multiple user functions in one class
 - [ ] StackMapTable + modern class version
-- [ ] Functions beyond main
+- [ ] Minecraft DSL lowering
 
 ## Later
 Minecraft modules, cross-edition, UI, 3D, web, tooling
