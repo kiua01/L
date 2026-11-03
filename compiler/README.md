@@ -1,25 +1,22 @@
-# L Compiler Prototype 0.0.5
+# L Compiler Prototype 0.0.6
 
 ## Status
 
 | Component | Status |
 |-----------|--------|
-| Lexer / Parser | Working (incl. `if` / `while`) |
-| Type checker | Subset |
-| JVM backend | `println`, Int locals, `+ - * /`, comparisons, **real if/while jumps** |
+| Lexer / Parser | `if`, `while`, **`when`** |
+| Type checker | Subset including `when` |
+| JVM backend | println, Int locals, arithmetic, if/while, **when** |
 
 ## Example
 
 ```l
 fun main() {
-    println("Hello from L!")
     val x = 10
-    val y = 32
-    println(x + y)
-    if (x < y) {
-        println("x < y")
-    } else {
-        println("x >= y")
+    when (x) {
+        10 -> println("x is 10")
+        20 -> println("x is 20")
+        else -> println("other")
     }
 }
 ```
@@ -31,7 +28,6 @@ java -cp out Main
 
 ## Next
 
-- `when`
+- StackMapTable / classfile improvements
 - Boolean locals
-- Loops with proper stack maps (Java 7+ verifier)
 - Gradle wrapper
