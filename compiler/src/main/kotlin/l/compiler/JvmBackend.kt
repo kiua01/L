@@ -105,6 +105,44 @@ internal class CodeGen {
                 branch(0xA7, start)
                 mark(end)
             }
+            is Stmt.When -> {
+                // subjectless when: each entry conditions are booleans
+                // with subject: compare subject == each condition (int only for now)
+                val end = label()
+                val subjectSlot = if (s.subject != null) {
+                    val slot = nextLocal++
+                    emitExpr(s.subject)
+                    emit(0x36, slot) // istore
+                    slot
+                } else null
+                for (entry in s.entries) {
+                    val next = label()
+                    if (entry.conditions == null) {
+                        entry.body.forEach { emitStmt(it) }
+                        branch(0xA7, end)
+                    } else {
+                        // OR of conditions
+                        val match = label()
+                        for ((i, c) in entry.conditions.withIndex()) {
+                            if (subjectSlot != null) {
+                                emit(0x15, subjectSlot)
+                                emitExpr(c)
+                                emit(0x64) // isub
+                                branch(0x99, match) // equal -> match
+                            } else {
+                                emitExpr(c)
+                                branch(0x9A, match) // ifne (true)
+                            }
+                        }
+                        branch(0xA7, next)
+                        mark(match)
+                        entry.body.forEach { emitStmt(it) }
+                        branch(0xA7, end)
+                        mark(next)
+                    }
+                }
+                mark(end)
+            }
             Stmt.Empty -> {}
         }
     }
