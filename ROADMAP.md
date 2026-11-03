@@ -1,60 +1,52 @@
 # L Language Roadmap
 
-## Phase 0 — Vision & Design (Current)
-- [x] Language vision and goals
-- [x] High-level feature set (Kotlin parity + Minecraft focus)
-- [x] Formal grammar sketch
-- [x] Compiler architecture notes
-- [x] Type system outline
+## Phase 0 — Vision & Design ✅ COMPLETE
+- [x] Language vision, goals, features
+- [x] Specification, type system, grammar, syntax
 - [x] Standard library outline
 - [x] Minecraft DSL design
+- [x] Cross-edition capability mapping
 - [x] UI module specification
-- [x] Cross-edition portability vision
-- [x] First-class 3D vision
-- [x] Websites & 3D websites vision
-- [x] `.L` (general) and `.le` (web) extension decision
-- [ ] Cross-edition capability mapping (detailed)
-- [ ] Deeper 3D API surface design
+- [x] 3D API + web / 3D websites (`.le`)
+- [x] Targets, interop, diagnostics
+- [x] Compiler architecture, tooling, packaging
+- [x] Examples (`.L` and `.le`)
 
-## Phase 1 — Specification
-- [ ] Complete language specification
-- [ ] Interop rules with Java & Kotlin
-- [ ] Multiplatform + web target design
-- [ ] Cross-edition capability mapping
-- [ ] 3D & web module specifications (detailed)
-- [ ] Error handling and diagnostics design
+## Phase 1 — Specification Hardening
+- [ ] Freeze core syntax decisions
+- [ ] Expand formal semantics where needed
+- [ ] Finalize stdlib module boundaries
+- [ ] Security & sandbox notes for web target
 
 ## Phase 2 — Compiler Prototype
-- [ ] Lexer + Parser (`.L` and `.le` files)
+- [ ] Lexer + Parser (`.L` and `.le`)
 - [ ] Name resolution & type checking (subset)
 - [ ] JVM bytecode backend (basic)
-- [ ] Simple standard library subset
-- [ ] Basic CLI (`l` command)
+- [ ] Basic CLI (`l`)
 
 ## Phase 3 — Minecraft Modules
-- [ ] `l.minecraft` core + DSLs
-- [ ] Example Fabric / NeoForge mods
+- [ ] `l.minecraft` + registry / event / packet / datagen prototypes
+- [ ] Example Fabric / NeoForge mod
 
-## Phase 4 — Cross-Edition & Portability
-- [ ] Unified model + Bedrock backend prototype
+## Phase 4 — Cross-Edition
+- [ ] Bedrock backend prototype
 - [ ] First bidirectional port examples
 
 ## Phase 5 — Launcher + UI + 3D
-- [ ] `l.launcher` + UI module prototype
-- [ ] 3D module prototype (desktop)
-- [ ] Example modern launcher (PC + Android)
+- [ ] Launcher module + UI prototype
+- [ ] Desktop 3D prototype
+- [ ] Example modern launcher
 
 ## Phase 6 — Web & 3D Web
-- [ ] Web backend / bundler for `.le`
-- [ ] Web 3D backend (WebGL / WebGPU)
+- [ ] `.le` web backend / bundler
+- [ ] Web 3D backend
 - [ ] Example website + 3D website
 
 ## Phase 7 — Tooling & Ecosystem
 - [ ] LSP, formatter, Gradle plugin
-- [ ] Documentation site
-- [ ] Package publishing
+- [ ] Docs site, publishing
 
 ## Long-term
 - Native backend
 - Mature Bedrock ↔ Java tooling
-- Rich 3D and web component ecosystem
+- Rich UI / 3D / web component ecosystem
