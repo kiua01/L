@@ -7,59 +7,54 @@
 - [x] Compiler architecture notes
 - [x] Type system outline
 - [x] Standard library outline
-- [x] Minecraft DSL design (registries, entities, events, packets, datagen)
+- [x] Minecraft DSL design
 - [x] UI module specification
-- [x] Cross-edition portability vision (Bedrock ↔ Java)
-- [x] Modern UI capabilities (built into L)
-- [x] Single language + `.L` file extension decision
+- [x] Cross-edition portability vision
+- [x] First-class 3D vision
+- [x] Websites & 3D websites vision
+- [x] `.L` (general) and `.le` (web) extension decision
 - [ ] Cross-edition capability mapping (detailed)
-- [ ] Launcher requirements (deeper)
+- [ ] Deeper 3D API surface design
 
 ## Phase 1 — Specification
-- [ ] Complete language specification (syntax + semantics)
+- [ ] Complete language specification
 - [ ] Interop rules with Java & Kotlin
-- [ ] Multiplatform target design (JVM primary, Android secondary)
-- [ ] Cross-edition capability mapping design
+- [ ] Multiplatform + web target design
+- [ ] Cross-edition capability mapping
+- [ ] 3D & web module specifications (detailed)
 - [ ] Error handling and diagnostics design
 
 ## Phase 2 — Compiler Prototype
-- [ ] Lexer + Parser (`.L` files)
+- [ ] Lexer + Parser (`.L` and `.le` files)
 - [ ] Name resolution & type checking (subset)
 - [ ] JVM bytecode backend (basic)
 - [ ] Simple standard library subset
 - [ ] Basic CLI (`l` command)
 
 ## Phase 3 — Minecraft Modules
-- [ ] `l.minecraft` core
-- [ ] Registry DSL
-- [ ] Event system helpers
-- [ ] Networking / packet DSL
-- [ ] Data generation support
+- [ ] `l.minecraft` core + DSLs
 - [ ] Example Fabric / NeoForge mods
 
 ## Phase 4 — Cross-Edition & Portability
-- [ ] Unified entity / block / item model
-- [ ] Bedrock backend prototype
-- [ ] Capability mapping & diagnostics
-- [ ] First successful bidirectional port examples
+- [ ] Unified model + Bedrock backend prototype
+- [ ] First bidirectional port examples
 
-## Phase 5 — Launcher Support + Modern UI
-- [ ] `l.launcher` module
-- [ ] Android target improvements
-- [ ] UI module prototype (declarative, reactive)
-- [ ] Example PC launcher with modern L UI
-- [ ] Example Android Java Edition launcher with modern L UI
+## Phase 5 — Launcher + UI + 3D
+- [ ] `l.launcher` + UI module prototype
+- [ ] 3D module prototype (desktop)
+- [ ] Example modern launcher (PC + Android)
 
-## Phase 6 — Tooling & Ecosystem
-- [ ] Language Server Protocol (LSP)
-- [ ] Formatter
-- [ ] Build system plugin (Gradle)
+## Phase 6 — Web & 3D Web
+- [ ] Web backend / bundler for `.le`
+- [ ] Web 3D backend (WebGL / WebGPU)
+- [ ] Example website + 3D website
+
+## Phase 7 — Tooling & Ecosystem
+- [ ] LSP, formatter, Gradle plugin
 - [ ] Documentation site
-- [ ] Package registry / publishing
+- [ ] Package publishing
 
 ## Long-term
-- Native backend (optional)
-- Advanced performance features for tick loops
-- Community-driven Minecraft libraries
-- Mature Bedrock ↔ Java porting tooling
-- Rich UI component ecosystem
+- Native backend
+- Mature Bedrock ↔ Java tooling
+- Rich 3D and web component ecosystem
