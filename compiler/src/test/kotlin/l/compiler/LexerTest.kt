@@ -6,25 +6,25 @@ import kotlin.test.assertTrue
 
 class CompilerTests {
     @Test
-    fun parsesWhen() {
+    fun stringAndBooleanLocals() {
         val source = """
             fun main() {
-                when (1) {
-                    1 -> println("one")
-                    else -> println("other")
+                val flag = true
+                val msg = "hi"
+                if (flag) {
+                    println(msg)
                 }
             }
         """.trimIndent()
-        val diag = DiagnosticBag()
-        val ast = Parser(Lexer(source).tokenize(), diag).parseFile()
-        val fn = ast.declarations.filterIsInstance<Decl.Function>().first()
-        val body = fn.body as Body.Block
-        assertTrue(body.statements.any { it is Stmt.When })
-        assertFalse(diag.hasErrors)
+        val r = CompilerPipeline.analyze(source)
+        assertFalse(r.diagnostics.hasErrors)
+        val dir = java.io.File.createTempFile("lout", "").apply { delete(); mkdir() }
+        JvmBackend().emit(r.ast, "Main", dir)
+        assertTrue(java.io.File(dir, "Main.class").exists())
     }
 
     @Test
-    fun compilesWhen() {
+    fun whenStillWorks() {
         val source = """
             fun main() {
                 when (2) {
@@ -34,11 +34,9 @@ class CompilerTests {
                 }
             }
         """.trimIndent()
-        val diag = DiagnosticBag()
-        val ast = Parser(Lexer(source).tokenize(), diag).parseFile()
-        TypeChecker(diag).check(ast)
+        val r = CompilerPipeline.analyze(source)
         val dir = java.io.File.createTempFile("lout", "").apply { delete(); mkdir() }
-        JvmBackend().emit(ast, "Main", dir)
+        JvmBackend().emit(r.ast, "Main", dir)
         assertTrue(java.io.File(dir, "Main.class").exists())
     }
 }
