@@ -1,22 +1,15 @@
 // examples/hello/Hello.L
 
+fun greet(name: String) {
+    println("Hello, " + name + "!")
+}
+
+fun add(a: Int, b: Int): Int {
+    return a + b
+}
+
 fun main() {
-    println("Hello from L!")
-    val x = 10
-    val y = 32
-    println(x + y)
-
-    val ok = true
-    if (ok) {
-        println("boolean ok")
-    }
-
-    val name = "L"
-    val greeting = "Hello, " + name + "!"
-    println(greeting)
-
-    when (x) {
-        10 -> println("x is 10")
-        else -> println("other")
-    }
+    greet("L")
+    val sum = add(10, 32)
+    println(sum)
 }
