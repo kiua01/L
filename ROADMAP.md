@@ -3,24 +3,18 @@
 ## Phase 0 — Vision & Design ✅ COMPLETE
 
 ## Phase 1 — Specification Hardening
-- [ ] Freeze core syntax decisions
-- [ ] Expand formal semantics where needed
+- [ ] Freeze remaining syntax edge cases
 
-## Phase 2 — Compiler Prototype 🚧 IN PROGRESS
-- [x] Project structure (Gradle + Kotlin)
+## Phase 2 — Compiler Prototype 🚧 IN PROGRESS (0.0.3)
 - [x] Lexer
-- [x] Expanded parser (imports, annotations, nested types)
-- [x] Diagnostics bag
-- [x] Early name resolver / symbol table
-- [x] CLI: lex, parse, resolve, check, version
-- [x] Unit tests
-- [ ] Expression / statement parsing depth
-- [ ] Type checking subset
-- [ ] JVM bytecode backend (basic)
+- [x] Parser with expressions & statements
+- [x] Diagnostics
+- [x] Name resolver
+- [x] Type checker (subset)
+- [x] JVM backend (minimal class emit)
+- [x] CLI: lex, parse, resolve, check, compile
+- [ ] Codegen driven by AST (not stub)
+- [ ] if / when / while
 - [ ] Gradle wrapper committed
 
-## Phase 3 — Minecraft Modules
-## Phase 4 — Cross-Edition
-## Phase 5 — Launcher + UI + 3D
-## Phase 6 — Web & 3D Web
-## Phase 7 — Tooling & Ecosystem
+## Phase 3+ — Minecraft, cross-edition, UI, 3D, web, tooling
