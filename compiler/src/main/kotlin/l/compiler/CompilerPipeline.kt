@@ -7,7 +7,8 @@ object CompilerPipeline {
     data class Result(
         val ast: AstNode.File,
         val diagnostics: DiagnosticBag,
-        val symbols: List<Resolver.Symbol>
+        val symbols: List<Resolver.Symbol>,
+        val minecraft: MinecraftDslLowerer.Result? = null
     )
 
     fun analyze(source: String): Result {
@@ -16,7 +17,8 @@ object CompilerPipeline {
         val ast = Parser(tokens, diagnostics).parseFile()
         val symbols = Resolver(diagnostics).resolve(ast)
         TypeChecker(diagnostics).check(ast)
-        return Result(ast, diagnostics, symbols)
+        val mc = MinecraftDslLowerer(diagnostics).analyze(ast)
+        return Result(ast, diagnostics, symbols, mc)
     }
 
     fun analyzeFile(path: String): Result = analyze(File(path).readText())
