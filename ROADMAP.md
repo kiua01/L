@@ -2,12 +2,11 @@
 
 ## Phase 0 — Vision & Design ✅ COMPLETE
 
-## Phase 2 — Compiler Prototype 🚧 0.0.10
+## Phase 2 — Compiler Prototype 🚧 0.0.11
 - [x] Front-end pipeline
 - [x] if / while / when
-- [x] Int, Boolean, String locals
-- [x] String concatenation
-- [x] Multiple functions + calls
+- [x] Multi-function JVM codegen
+- [x] **Dual vocabulary** (full English + modern abbreviated)
 - [x] Gradle wrapper
 - [ ] Classes / objects in bytecode
 - [ ] StackMapTable + modern class version
