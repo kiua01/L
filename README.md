@@ -12,6 +12,8 @@
 
 Full **Kotlin feature parity**, plus domain power.
 
+**Dual vocabulary:** normal English keywords *and* modern abbreviated forms (`fn`/`ret`/`let`/`loop`/`match`, …).
+
 ### File extensions
 | Extension | Use |
 |-----------|-----|
@@ -19,7 +21,7 @@ Full **Kotlin feature parity**, plus domain power.
 | **`.le`** | Websites and web 3D |
 
 > **Design phase: complete.**  
-> **Compiler prototype: 0.0.7** (if/while/when, JVM codegen, Gradle wrapper).
+> **Compiler prototype: 0.0.11** (if/while/when, JVM codegen, Gradle wrapper).
 
 ---
 
@@ -41,6 +43,7 @@ See [compiler/README.md](compiler/README.md).
 | Doc | Description |
 |-----|-------------|
 | [Overview](docs/OVERVIEW.md) | Start here — FAQ & reading order |
+| [Language Style](docs/LANGUAGE_STYLE.md) | Full English + modern abbreviated keywords |
 | [Goals](docs/GOALS.md) | Goals and non-goals |
 | [Features](docs/FEATURES.md) | Major capabilities |
 | [Specification](docs/SPEC.md) | Language spec draft |
