@@ -1,37 +1,37 @@
-# L Compiler Prototype 0.0.4
+# L Compiler Prototype 0.0.5
 
 ## Status
 
 | Component | Status |
 |-----------|--------|
-| Lexer | Working |
-| Parser | Declarations + expressions + `if` / `while` |
-| Diagnostics | Yes |
-| Resolver | Symbol table |
-| Type checker | Locals, returns, conditions, `println` |
-| JVM backend | AST-driven `println("...")` sequences |
+| Lexer / Parser | Working (incl. `if` / `while`) |
+| Type checker | Subset |
+| JVM backend | `println`, Int locals, `+ - * /`, comparisons, **real if/while jumps** |
 
-## Commands
-
-```bash
-./gradlew :compiler:run --args="check examples/hello/Hello.L"
-./gradlew :compiler:run --args="compile examples/hello/Hello.L out Main"
-java -cp out Main
-./gradlew :compiler:test
-```
-
-## Supported codegen (tiny)
+## Example
 
 ```l
 fun main() {
     println("Hello from L!")
-    println("Compiler prototype 0.0.4")
+    val x = 10
+    val y = 32
+    println(x + y)
+    if (x < y) {
+        println("x < y")
+    } else {
+        println("x >= y")
+    }
 }
+```
+
+```bash
+./gradlew :compiler:run --args="compile examples/hello/Hello.L out Main"
+java -cp out Main
 ```
 
 ## Next
 
-- Real JVM branching for `if` / `while`
-- Local variables in bytecode
-- Integer arithmetic codegen
-- `when` expression
+- `when`
+- Boolean locals
+- Loops with proper stack maps (Java 7+ verifier)
+- Gradle wrapper
