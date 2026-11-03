@@ -13,17 +13,38 @@ import java.io.File
 class JvmBackend {
     fun emit(file: AstNode.File, className: String, outputDir: File) {
         outputDir.mkdirs()
-        val functions = collectFunctions(file)
-        if (functions.isEmpty()) {
+        // Top-level functions → main class
+        emitClass(className, collectTopLevelFunctions(file), outputDir, ensureMain = true)
+        // Top-level object/class with function members → separate .class files
+        for (d in file.declarations) {
+            if (d is Decl.ClassLike && (d.kind.contains("object") || d.kind == "class" || d.kind.contains("class"))) {
+                val fns = d.members.filterIsInstance<Decl.Function>()
+                if (fns.isNotEmpty()) {
+                    emitClass(d.name, fns, outputDir, ensureMain = false)
+                }
+            }
+        }
+    }
+
+    private fun emitClass(
+        className: String,
+        functions: List<Decl.Function>,
+        outputDir: File,
+        ensureMain: Boolean
+    ) {
+        if (functions.isEmpty() && ensureMain) {
             val cg = CodeGen(emptyMap())
             cg.emitReturn()
-            File(outputDir, "$className.class").writeBytes(ClassFile(className).build(listOf(MethodEmit("main", "([Ljava/lang/String;)V", cg))))
+            File(outputDir, "$className.class").writeBytes(
+                ClassFile(className).build(listOf(MethodEmit("main", "([Ljava/lang/String;)V", cg)))
+            )
             return
         }
+        if (functions.isEmpty()) return
+
         val sigs = functions.associate { it.name to descriptorOf(it) }
         val methods = functions.map { fn ->
             val cg = CodeGen(sigs)
-            // params as locals 0..n-1 for static methods (main keeps slot 0 for String[] if main)
             if (fn.name == "main") {
                 cg.reserveMainArgs()
             } else {
@@ -35,30 +56,16 @@ class JvmBackend {
             cg.emitBody(fn.body)
             MethodEmit(fn.name, sigs[fn.name] ?: "()V", cg)
         }
-        // ensure main exists
-        val hasMain = methods.any { it.name == "main" }
-        val all = if (hasMain) methods else {
+        val all = if (ensureMain && methods.none { it.name == "main" }) {
             val cg = CodeGen(sigs)
             cg.emitReturn()
             methods + MethodEmit("main", "([Ljava/lang/String;)V", cg)
-        }
+        } else methods
         File(outputDir, "$className.class").writeBytes(ClassFile(className).build(all))
     }
 
-    private fun collectFunctions(file: AstNode.File): List<Decl.Function> {
-        val out = mutableListOf<Decl.Function>()
-        fun walk(decls: List<Decl>) {
-            for (d in decls) {
-                when (d) {
-                    is Decl.Function -> out += d
-                    is Decl.ClassLike -> walk(d.members)
-                    else -> {}
-                }
-            }
-        }
-        walk(file.declarations)
-        return out
-    }
+    private fun collectTopLevelFunctions(file: AstNode.File): List<Decl.Function> =
+        file.declarations.filterIsInstance<Decl.Function>()
 
     private fun descriptorOf(fn: Decl.Function): String {
         if (fn.name == "main") return "([Ljava/lang/String;)V"
