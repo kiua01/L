@@ -1,51 +1,45 @@
 # L Compiler Prototype
 
-Early implementation of the L language toolchain.
+Early implementation of the L language toolchain (Kotlin).
 
-## Status
+## Status (0.0.2)
 
 | Component | Status |
 |-----------|--------|
-| Lexer | Working (Kotlin-like + L soft keywords) |
-| Parser | Minimal (package, fun, val/var, class/object) |
+| Lexer | Working |
+| Parser | Expanded subset (package, import, annotations, fun/val/var, class/object/interface/enum/data/sealed, nested members) |
+| Diagnostics | Basic error bag with source positions |
+| Name resolver | Symbol table for declarations (redeclaration checks) |
 | Type checker | Not started |
 | JVM backend | Not started |
-| `.le` web specifics | Recognized as source files only |
 
-## Build
-
-Requires JDK 17+ and Gradle.
+## Commands
 
 ```bash
+./gradlew :compiler:run --args="lex <file>"
+./gradlew :compiler:run --args="parse <file>"
+./gradlew :compiler:run --args="resolve <file>"
+./gradlew :compiler:run --args="check <file>"
 ./gradlew :compiler:run --args="version"
-./gradlew :compiler:run --args="lex ../examples/simple-mod/Main.L"
-./gradlew :compiler:run --args="parse ../examples/simple-mod/Main.L"
 ./gradlew :compiler:test
-```
-
-If the Gradle wrapper is not present yet:
-
-```bash
-gradle wrapper
 ```
 
 ## Layout
 
 ```
-compiler/
-  src/main/kotlin/l/compiler/
-    Token.kt
-    Lexer.kt
-    Ast.kt
-    Parser.kt
-    Main.kt
-  src/test/kotlin/l/compiler/
-    LexerTest.kt
+compiler/src/main/kotlin/l/compiler/
+  Token.kt
+  Lexer.kt
+  Ast.kt
+  Parser.kt
+  Diagnostic.kt
+  Resolver.kt
+  Main.kt
 ```
 
-## Next steps
+## Next
 
-1. Expand parser toward the grammar in `docs/GRAMMAR.md`
-2. Name resolution + basic type checking
-3. JVM bytecode emission for a tiny subset
-4. Better diagnostics with source ranges
+1. Richer expression / statement parsing
+2. Type checking subset
+3. JVM bytecode for simple functions
+4. Gradle wrapper in repo
