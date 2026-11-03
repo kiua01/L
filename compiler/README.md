@@ -1,31 +1,29 @@
-# L Compiler Prototype 0.0.11
+# L Compiler Prototype 0.0.12
 
-## Dual vocabulary
+## Highlights
 
-L accepts **normal English** and **modern abbreviated English** keywords:
-
-| Normal | Abbreviated |
-|--------|-------------|
-| `fun` / `function` | `fn` / `def` |
-| `val` | `let` |
-| `var` | `mut` |
-| `return` | `ret` |
-| `while` | `loop` |
-| `when` | `match` |
-| `package` | `pkg` |
-| `import` | `imp` |
-| `class` | `cls` |
-| `object` | `obj` |
-
-See [docs/LANGUAGE_STYLE.md](../docs/LANGUAGE_STYLE.md).
-
-## Codegen
-
+- Dual vocabulary (`fn`/`ret`/`let`/`obj` …)
 - Multiple functions + calls
-- Int / Boolean / String
-- String `+`, println, if / while / when
+- **`object` / `class` members → separate `.class` files**
+- Minecraft DSL analysis stub (registries / entities / packets detection)
+- String concat, println, control flow
+
+## Object example
+
+```l
+obj Util {
+    fn double(x: Int): Int {
+        ret x + x
+    }
+}
+
+fn main() {
+    println("ok")
+}
+```
+
+Produces `Main.class` and `Util.class`.
 
 ```bash
-./gradlew :compiler:run --args="compile examples/hello/HelloAbbreviated.L out Main"
-java -cp out Main
+./gradlew :compiler:run --args="compile examples/hello/Objects.L out Main"
 ```
