@@ -1,12 +1,11 @@
-# L Compiler Prototype 0.0.8
+# L Compiler Prototype 0.0.9
 
-## Codegen support
+## Codegen
 
-- `fun main()`
-- Int / **Boolean** / **String** locals
-- Arithmetic & comparisons on Int
-- `&&` / `||` / `!` on Boolean (as 0/1)
-- `println` for strings, ints, and locals
+- Int / Boolean / String locals
+- Arithmetic, comparisons, `&&` `||` `!`
+- **String `+` concatenation** (StringBuilder)
+- `println`
 - `if` / `while` / `when`
 
 ## Run
@@ -17,6 +16,10 @@
 java -cp out Main
 ```
 
-## Notes
+## Example
 
-Classfiles are Java 5 (v49) so StackMapTable is not required.
+```l
+val name = "L"
+val greeting = "Hello, " + name + "!"
+println(greeting)
+```
