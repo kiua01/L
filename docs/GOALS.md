@@ -23,34 +23,40 @@
    - Good performance characteristics for games
 
 5. **Cross-Edition Portability**
-   - Make it practical to port Bedrock Add-ons → Java Edition Mods
-   - Make it practical to port Java Edition Mods → Bedrock Add-ons
-   - Provide a unified high-level model that can target both ecosystems
-   - Clear diagnostics and polyfills when features differ between editions
+   - Port Bedrock Add-ons → Java Edition Mods
+   - Port Java Edition Mods → Bedrock Add-ons
+   - Unified high-level model + clear diagnostics
 
 6. **Modern UI built into the language**
-   - First-class support for building beautiful, modern launcher and tool interfaces
-   - Declarative, reactive, animation-friendly UI capabilities
-   - Excellent desktop + Android support
-   - All in the same language — no separate UI language needed
+   - Beautiful, modern launcher and tool interfaces
+   - Declarative, reactive, animation-friendly
+   - Desktop + Android
 
-7. **One language, one extension**
-   - Everything is written in **L**
-   - All source files use the **`.L`** extension
-   - Mods, launchers, UI, cross-edition logic — all `.L`
+7. **First-class 3D**
+   - Very good at 3D for tools, games, launchers, and the web
+   - High-level scene, model, camera, light, and material APIs
+   - Real-time performance
+
+8. **Websites and 3D websites**
+   - Very good for building modern websites
+   - First-class support for 3D websites
+   - Web source files use the **`.le`** extension
+
+9. **Clear file extensions**
+   - **`.L`** — mods, launchers, general logic, desktop/mobile UI
+   - **`.le`** — websites and web 3D
 
 ## Non-Goals (for now)
 
-- Competing with general-purpose languages outside the Minecraft / game tooling space
-- Replacing the JVM (L targets the JVM primarily)
-- Inventing a completely new syntax that breaks Kotlin familiarity
-- Perfect 1:1 feature parity between Bedrock and Java (some differences are fundamental)
-- A separate UI language (UI is part of L)
+- Competing with every general-purpose language outside this domain
+- Replacing the JVM as the primary runtime
+- Perfect 1:1 feature parity between Bedrock and Java
+- A separate UI or web language (both are part of L)
 
 ## Success Metrics (long term)
 
 - Popular mods written in L
-- At least one high-quality public Minecraft launcher using L (including modern UI)
-- Android Java Edition launcher(s) built with L
-- Successful ports of real content between Bedrock and Java using L
-- Active community contributing to the language and Minecraft modules
+- High-quality Minecraft launchers (PC + Android) using L
+- Successful Bedrock ↔ Java ports
+- Real websites and 3D websites built with L (`.le`)
+- Active community around the language and its modules
