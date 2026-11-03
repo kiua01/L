@@ -27,20 +27,11 @@ Write mods and launchers with modern language features, excellent concurrency, a
 **Port any Bedrock Add-on to a Java Edition mod**  
 **Port any Java Edition mod to a Bedrock Add-on**
 
-L provides a unified high-level model that can target both ecosystems, with clear diagnostics when features differ.
-
 ### 3. Modern UI (Built into L)
 Create very modern, beautiful, fluid interfaces for launchers and tools — all in the same language.
 
 ### 4. Single File Extension
-All L source files use **`.L`**:
-
-```
-Main.L              // mod
-RobotEntity.L       // cross-edition entity
-HomeScreen.L        // modern launcher UI
-LauncherCore.L      // shared launcher logic
-```
+All L source files use **`.L`**.
 
 ---
 
@@ -52,7 +43,9 @@ LauncherCore.L      // shared launcher logic
 | [Features](docs/FEATURES.md) | Cross-edition portability + modern UI |
 | [Specification](docs/SPEC.md) | Early language specification draft |
 | [Type System](docs/TYPE_SYSTEM.md) | Detailed type system outline |
+| [Standard Library](docs/STDLIB.md) | Core, Minecraft, Launcher, and UI modules |
 | [Minecraft DSL](docs/MINECRAFT_DSL.md) | Registries, entities, events, packets, datagen |
+| [UI Module](docs/UI.md) | Declarative UI, state, layout, animation |
 | [Syntax](docs/SYNTAX.md) | Kotlin parity + Minecraft DSL vision |
 | [Grammar](docs/GRAMMAR.md) | Formal grammar sketch |
 | [Compiler](docs/COMPILER.md) | Compiler architecture notes |
@@ -112,7 +105,9 @@ L/
 │   ├── FEATURES.md
 │   ├── SPEC.md
 │   ├── TYPE_SYSTEM.md
+│   ├── STDLIB.md
 │   ├── MINECRAFT_DSL.md
+│   ├── UI.md
 │   ├── SYNTAX.md
 │   ├── GRAMMAR.md
 │   └── COMPILER.md
@@ -133,13 +128,14 @@ L/
 - [x] Formal grammar sketch
 - [x] Compiler architecture notes
 - [x] Type system outline
-- [x] Minecraft DSL design (registries, entities, events, packets, datagen)
+- [x] Standard library outline
+- [x] Minecraft DSL design
+- [x] UI module specification
 - [x] Cross-edition portability vision
 - [x] Modern UI capabilities (built into L)
 - [x] Single `.L` file extension decision
 - [x] Roadmap
 - [x] Example sketches
-- [ ] Standard library design
 - [ ] Compiler prototype
 - [ ] Minecraft DSL prototypes
 - [ ] UI module prototype
