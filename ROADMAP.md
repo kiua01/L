@@ -2,16 +2,14 @@
 
 ## Phase 0 — Vision & Design ✅ COMPLETE
 
-## Phase 2 — Compiler Prototype 🚧 0.0.4
-- [x] Lexer, parser, diagnostics, resolver
-- [x] Expression + statement parsing
-- [x] `if` / `while` parsing
-- [x] Type checker subset
-- [x] JVM backend: AST-driven `println` strings
-- [ ] JVM branching for `if` / `while`
-- [ ] Locals + arithmetic in bytecode
+## Phase 2 — Compiler Prototype 🚧 0.0.5
+- [x] Lexer, parser, diagnostics, resolver, type checker subset
+- [x] Expressions, statements, `if` / `while`
+- [x] JVM: println, Int locals, arithmetic, comparisons
+- [x] JVM: real branch offsets for if/while
 - [ ] `when`
+- [ ] Stack map frames / modern classfile version
 - [ ] Gradle wrapper
 
-## Later phases
+## Later
 Minecraft modules, cross-edition, UI, 3D, web, tooling
