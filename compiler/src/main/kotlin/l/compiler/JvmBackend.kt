@@ -120,16 +120,19 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
         nextLocal = n
     }
 
+    private var emittedValueReturn = false
+
     fun emitBody(body: Body?) {
+        emittedValueReturn = false
         when (body) {
             is Body.Block -> body.statements.forEach { emitStmt(it) }
             is Body.Expression -> {
                 emitExpr(body.expr)
-                // if expression body of non-void, return handled by caller signature later
             }
             null -> {}
         }
-        emitReturn()
+        // Only append trailing return if we didn't already emit ireturn/areturn
+        if (!emittedValueReturn) emitReturn()
         patch()
     }
 
@@ -197,9 +200,9 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
                     emitExpr(s.expr)
                     val ty = inferExprType(s.expr)
                     when (ty) {
-                        "String" -> emit(0xB0) // areturn
+                        "String" -> { emit(0xB0); emittedValueReturn = true }
                         "Unit" -> emit(0xB1)
-                        else -> emit(0xAC) // ireturn
+                        else -> { emit(0xAC); emittedValueReturn = true }
                     }
                 } else emit(0xB1)
             }
