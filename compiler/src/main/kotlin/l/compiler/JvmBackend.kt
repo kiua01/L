@@ -238,6 +238,7 @@ internal class CodeGen {
     fun maxLocals() = nextLocal.coerceAtLeast(1)
 }
 
+
 internal class ClassFile(private val className: String) {
     fun build(cg: CodeGen): ByteArray {
         val p = Pool()
@@ -256,56 +257,116 @@ internal class ClassFile(private val className: String) {
         fun s(v: String) = strIdx.getOrPut(v) { p.string(p.utf8(v)) }
         cg.prints.filterIsInstance<CodeGen.PrintSite.Str>().forEach { s(it.s) }
 
-        val expanded = mutableListOf<Int>()
         val raw = cg.rawBytes().map { it.toInt() and 0xFF }
-        var i = 0
-        while (i < raw.size) {
-            if (raw[i] == 0xFC) {
-                val site = cg.prints[raw[i + 1]]
-                expanded += 0xB2; expanded += (outF shr 8) and 0xFF; expanded += outF and 0xFF
+
+        fun expandLen(idx: Int): Int {
+            val site = cg.prints[raw[idx + 1]]
+            return when (site) {
+                is CodeGen.PrintSite.Str -> 8
+                is CodeGen.PrintSite.IntLocal -> 8
+                is CodeGen.PrintSite.IntConst -> {
+                    val v = site.v
+                    val push = when (v) {
+                        in 0..5 -> 1
+                        in -128..127 -> 2
+                        else -> 3
+                    }
+                    3 + push + 3
+                }
+            }
+        }
+
+        val map = IntArray(raw.size + 1)
+        var ni = 0
+        var oi = 0
+        while (oi < raw.size) {
+            map[oi] = ni
+            if (raw[oi] == 0xFC) {
+                ni += expandLen(oi)
+                oi += 2
+            } else {
+                ni += 1
+                oi += 1
+            }
+        }
+        map[raw.size] = ni
+
+        val expanded = mutableListOf<Int>()
+        oi = 0
+        while (oi < raw.size) {
+            if (raw[oi] == 0xFC) {
+                val site = cg.prints[raw[oi + 1]]
+                expanded += 0xB2
+                expanded += (outF shr 8) and 0xFF
+                expanded += outF and 0xFF
                 when (site) {
                     is CodeGen.PrintSite.Str -> {
                         val si = s(site.s)
-                        expanded += 0x12; expanded += si and 0xFF
-                        expanded += 0xB6; expanded += (prStr shr 8) and 0xFF; expanded += prStr and 0xFF
+                        expanded += 0x12
+                        expanded += si and 0xFF
+                        expanded += 0xB6
+                        expanded += (prStr shr 8) and 0xFF
+                        expanded += prStr and 0xFF
                     }
                     is CodeGen.PrintSite.IntConst -> {
                         val v = site.v
                         when (v) {
                             in 0..5 -> expanded += 0x03 + v
-                            in -128..127 -> { expanded += 0x10; expanded += v and 0xFF }
-                            else -> { expanded += 0x11; expanded += (v shr 8) and 0xFF; expanded += v and 0xFF }
+                            in -128..127 -> {
+                                expanded += 0x10
+                                expanded += v and 0xFF
+                            }
+                            else -> {
+                                expanded += 0x11
+                                expanded += (v shr 8) and 0xFF
+                                expanded += v and 0xFF
+                            }
                         }
-                        expanded += 0xB6; expanded += (prInt shr 8) and 0xFF; expanded += prInt and 0xFF
+                        expanded += 0xB6
+                        expanded += (prInt shr 8) and 0xFF
+                        expanded += prInt and 0xFF
                     }
                     is CodeGen.PrintSite.IntLocal -> {
-                        expanded += 0x15; expanded += site.slot
-                        expanded += 0xB6; expanded += (prInt shr 8) and 0xFF; expanded += prInt and 0xFF
+                        expanded += 0x15
+                        expanded += site.slot
+                        expanded += 0xB6
+                        expanded += (prInt shr 8) and 0xFF
+                        expanded += prInt and 0xFF
                     }
                 }
-                i += 2
+                oi += 2
             } else {
-                expanded += raw[i]
-                i++
+                expanded += raw[oi]
+                oi += 1
             }
         }
-        // NOTE: branch offsets were computed before expansion; only safe if markers aren't inside
-        // branched regions before the marker expansion. Our markers are println sites; offsets for
-        // if/while still valid if println markers expand equally... they DON'T.
-        // Fix: expand markers BEFORE patching branches — so CodeGen should not use markers inside
-        // length-sensitive way. Simpler fix for 0.0.5: only support println outside complex offsets
-        // by expanding during emit. For correctness, re-patch is hard.
-        // Practical approach: expand first without branches using two-pass — for now document limitation
-        // Actually we patch before expand so offsets break when println appears before a branch target.
-        // Solution: expand in CodeGen.emitPrintln directly with pool deferred... 
-        // Quick fix: forbid markers; do second compilation without markers by collecting first.
-        //
-        // Better: don't patch until after expansion — store labels as symbolic.
-        // For 0.0.5 ship with: expand then WRONG offsets if println before label.
-        // I'll expand during codegen by postponing patch until after ClassFile expands — move patch here.
+
+        fun isBranch(op: Int) =
+            op == 0x99 || op == 0x9A || op == 0x9B || op == 0x9C || op == 0x9D || op == 0x9E || op == 0xA7
+
+        oi = 0
+        var ei = 0
+        while (oi < raw.size) {
+            val op = raw[oi]
+            if (op == 0xFC) {
+                ei += expandLen(oi)
+                oi += 2
+            } else if (isBranch(op) && oi + 2 < raw.size) {
+                val oldOff = ((raw[oi + 1] shl 8) or raw[oi + 2]).toShort().toInt()
+                val targetOld = (oi + oldOff).coerceIn(0, raw.size)
+                val targetNew = map[targetOld]
+                val newOff = targetNew - ei
+                expanded[ei + 1] = (newOff shr 8) and 0xFF
+                expanded[ei + 2] = newOff and 0xFF
+                ei += 1
+                oi += 1
+            } else {
+                ei += 1
+                oi += 1
+            }
+        }
 
         val codeBytes = expanded.map { it.toByte() }.toByteArray()
-
         val baos = ByteArrayOutputStream()
         val out = DataOutputStream(baos)
         out.writeInt(0xCAFEBABE.toInt())
@@ -340,23 +401,43 @@ private class Pool {
     fun utf8(s: String): Int {
         val b = s.toByteArray(Charsets.UTF_8)
         val e = ByteArray(3 + b.size)
-        e[0] = 1; e[1] = (b.size shr 8).toByte(); e[2] = (b.size and 0xFF).toByte()
+        e[0] = 1
+        e[1] = (b.size shr 8).toByte()
+        e[2] = (b.size and 0xFF).toByte()
         System.arraycopy(b, 0, e, 3, b.size)
         items += e
         return items.size
     }
-    fun cls(n: Int): Int { items += byteArrayOf(7, (n shr 8).toByte(), (n and 0xFF).toByte()); return items.size }
-    fun string(u: Int): Int { items += byteArrayOf(8, (u shr 8).toByte(), (u and 0xFF).toByte()); return items.size }
+    fun cls(n: Int): Int {
+        items += byteArrayOf(7, (n shr 8).toByte(), (n and 0xFF).toByte())
+        return items.size
+    }
+    fun string(u: Int): Int {
+        items += byteArrayOf(8, (u shr 8).toByte(), (u and 0xFF).toByte())
+        return items.size
+    }
     fun nat(n: Int, d: Int): Int {
-        items += byteArrayOf(12, (n shr 8).toByte(), (n and 0xFF).toByte(), (d shr 8).toByte(), (d and 0xFF).toByte())
+        items += byteArrayOf(
+            12,
+            (n shr 8).toByte(), (n and 0xFF).toByte(),
+            (d shr 8).toByte(), (d and 0xFF).toByte()
+        )
         return items.size
     }
     fun field(c: Int, nt: Int): Int {
-        items += byteArrayOf(9, (c shr 8).toByte(), (c and 0xFF).toByte(), (nt shr 8).toByte(), (nt and 0xFF).toByte())
+        items += byteArrayOf(
+            9,
+            (c shr 8).toByte(), (c and 0xFF).toByte(),
+            (nt shr 8).toByte(), (nt and 0xFF).toByte()
+        )
         return items.size
     }
     fun method(c: Int, nt: Int): Int {
-        items += byteArrayOf(10, (c shr 8).toByte(), (c and 0xFF).toByte(), (nt shr 8).toByte(), (nt and 0xFF).toByte())
+        items += byteArrayOf(
+            10,
+            (c shr 8).toByte(), (c and 0xFF).toByte(),
+            (nt shr 8).toByte(), (nt and 0xFF).toByte()
+        )
         return items.size
     }
     fun write(out: DataOutputStream) {
