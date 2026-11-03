@@ -33,18 +33,21 @@ class JvmBackend {
     }
 }
 
+
 internal class CodeGen {
     private val code = mutableListOf<Int>()
     private val locals = linkedMapOf<String, Int>()
-    private val localTypes = linkedMapOf<String, String>() // Int or Boolean
+    private val localTypes = linkedMapOf<String, String>() // Int, Boolean, String
     private var nextLocal = 1
     private val labels = mutableListOf<Label>()
     val prints = mutableListOf<PrintSite>()
+    val stringConsts = mutableListOf<String>() // ldc strings used as values
 
     sealed class PrintSite {
         data class Str(val s: String) : PrintSite()
         data class IntConst(val v: Int) : PrintSite()
         data class IntLocal(val slot: Int) : PrintSite()
+        data class StringLocal(val slot: Int) : PrintSite()
     }
 
     class Label {
@@ -76,12 +79,44 @@ internal class CodeGen {
         }
     }
 
+    private fun allocLocal(name: String, type: String): Int {
+        localTypes[name] = type
+        return locals.getOrPut(name) { nextLocal++ }
+    }
+
+    private fun inferExprType(e: Expr): String = when (e) {
+        is Expr.Literal -> when (e.kind) {
+            LitKind.INT -> "Int"
+            LitKind.BOOL -> "Boolean"
+            LitKind.STRING -> "String"
+            LitKind.FLOAT -> "Double"
+            LitKind.CHAR -> "Char"
+            LitKind.NULL -> "String" // treat as ref
+        }
+        is Expr.Ident -> localTypes[e.name] ?: "Int"
+        is Expr.Binary -> when (e.op) {
+            "==", "!=", "<", ">", "<=", ">=", "&&", "||" -> "Boolean"
+            else -> "Int"
+        }
+        is Expr.Unary -> if (e.op == "!") "Boolean" else "Int"
+        is Expr.Call -> "Unit"
+        else -> "Int"
+    }
+
     private fun emitStmt(s: Stmt) {
         when (s) {
             is Stmt.LocalVar -> {
-                val slot = locals.getOrPut(s.name) { nextLocal++ }
-                if (s.init != null) emitExpr(s.init) else emit(0x03) // iconst_0
-                emit(0x36, slot) // istore
+                val ty = s.type ?: s.init?.let { inferExprType(it) } ?: "Int"
+                val slot = allocLocal(s.name, ty)
+                if (s.init != null) emitExpr(s.init) else when (ty) {
+                    "String" -> {
+                        // aconst_null
+                        emit(0x01)
+                    }
+                    else -> emit(0x03) // iconst_0
+                }
+                if (ty == "String") emit(0x3A, slot) // astore
+                else emit(0x36, slot) // istore
             }
             is Stmt.ExprStmt -> emitExpr(s.expr)
             is Stmt.Return -> s.expr?.let { emitExpr(it) }
@@ -91,7 +126,7 @@ internal class CodeGen {
                 val endL = label()
                 branch(0x99, elseL) // ifeq
                 s.thenBranch.forEach { emitStmt(it) }
-                branch(0xA7, endL) // goto
+                branch(0xA7, endL)
                 mark(elseL)
                 s.elseBranch?.forEach { emitStmt(it) }
                 mark(endL)
@@ -107,13 +142,11 @@ internal class CodeGen {
                 mark(end)
             }
             is Stmt.When -> {
-                // subjectless when: each entry conditions are booleans
-                // with subject: compare subject == each condition (int only for now)
                 val end = label()
                 val subjectSlot = if (s.subject != null) {
                     val slot = nextLocal++
                     emitExpr(s.subject)
-                    emit(0x36, slot) // istore
+                    emit(0x36, slot)
                     slot
                 } else null
                 for (entry in s.entries) {
@@ -122,17 +155,16 @@ internal class CodeGen {
                         entry.body.forEach { emitStmt(it) }
                         branch(0xA7, end)
                     } else {
-                        // OR of conditions
                         val match = label()
-                        for ((i, c) in entry.conditions.withIndex()) {
+                        for (c in entry.conditions) {
                             if (subjectSlot != null) {
                                 emit(0x15, subjectSlot)
                                 emitExpr(c)
-                                emit(0x64) // isub
-                                branch(0x99, match) // equal -> match
+                                emit(0x64)
+                                branch(0x99, match)
                             } else {
                                 emitExpr(c)
-                                branch(0x9A, match) // ifne (true)
+                                branch(0x9A, match)
                             }
                         }
                         branch(0xA7, next)
@@ -154,18 +186,23 @@ internal class CodeGen {
                 LitKind.INT -> pushInt(e.value.toInt())
                 LitKind.BOOL -> emit(if (e.value == "true") 0x04 else 0x03)
                 LitKind.STRING -> {
-                    // only meaningful for println; push nothing
+                    stringConsts += e.value
+                    emit(0xFD, stringConsts.size - 1) // string load marker
                 }
                 else -> emit(0x03)
             }
             is Expr.Ident -> {
                 val slot = locals[e.name]
-                if (slot != null) emit(0x15, slot) else emit(0x03)
+                val ty = localTypes[e.name] ?: "Int"
+                if (slot != null) {
+                    if (ty == "String") emit(0x19, slot) // aload
+                    else emit(0x15, slot) // iload
+                } else emit(0x03)
             }
             is Expr.Unary -> {
                 emitExpr(e.expr)
                 when (e.op) {
-                    "-" -> emit(0x74) // ineg
+                    "-" -> emit(0x74)
                     "!" -> {
                         val z = label(); val end = label()
                         branch(0x99, z)
@@ -179,6 +216,7 @@ internal class CodeGen {
             }
             is Expr.Binary -> when (e.op) {
                 "+", "-", "*", "/" -> {
+                    // string + not supported in codegen yet
                     emitExpr(e.left); emitExpr(e.right)
                     emit(when (e.op) {
                         "+" -> 0x60; "-" -> 0x64; "*" -> 0x68; else -> 0x6C
@@ -186,7 +224,7 @@ internal class CodeGen {
                 }
                 "==", "!=", "<", ">", "<=", ">=" -> {
                     emitExpr(e.left); emitExpr(e.right)
-                    emit(0x64) // isub
+                    emit(0x64)
                     val t = label(); val end = label()
                     branch(when (e.op) {
                         "==" -> 0x99; "!=" -> 0x9A; "<" -> 0x9B
@@ -197,6 +235,13 @@ internal class CodeGen {
                     mark(t)
                     emit(0x04)
                     mark(end)
+                }
+                "&&", "||" -> {
+                    // left & right as ints 0/1
+                    emitExpr(e.left)
+                    emitExpr(e.right)
+                    if (e.op == "&&") emit(0x7E) // iand
+                    else emit(0x80) // ior
                 }
                 else -> emit(0x03)
             }
@@ -211,10 +256,16 @@ internal class CodeGen {
             }
             is Expr.Assign -> {
                 if (e.target is Expr.Ident) {
-                    val slot = locals.getOrPut(e.target.name) { nextLocal++ }
+                    val ty = localTypes[e.target.name] ?: inferExprType(e.value)
+                    val slot = allocLocal(e.target.name, ty)
                     emitExpr(e.value)
-                    emit(0x36, slot)
-                    emit(0x15, slot)
+                    if (ty == "String") {
+                        emit(0x3A, slot)
+                        emit(0x19, slot)
+                    } else {
+                        emit(0x36, slot)
+                        emit(0x15, slot)
+                    }
                 } else emitExpr(e.value)
             }
             else -> emit(0x03)
@@ -224,7 +275,7 @@ internal class CodeGen {
     private fun emitPrintln(arg: Expr?) {
         when (arg) {
             is Expr.Literal -> when (arg.kind) {
-                LitKind.STRING -> {
+                LitKind.STRING, LitKind.BOOL -> {
                     prints += PrintSite.Str(arg.value)
                     emit(0xFC, prints.size - 1)
                 }
@@ -232,17 +283,25 @@ internal class CodeGen {
                     prints += PrintSite.IntConst(arg.value.toInt())
                     emit(0xFC, prints.size - 1)
                 }
-                LitKind.BOOL -> {
+                else -> {
                     prints += PrintSite.Str(arg.value)
                     emit(0xFC, prints.size - 1)
                 }
-                else -> {}
             }
             is Expr.Ident -> {
                 val slot = locals[arg.name]
+                val ty = localTypes[arg.name]
                 if (slot != null) {
-                    prints += PrintSite.IntLocal(slot)
-                    emit(0xFC, prints.size - 1)
+                    when (ty) {
+                        "String" -> {
+                            prints += PrintSite.StringLocal(slot)
+                            emit(0xFC, prints.size - 1)
+                        }
+                        else -> {
+                            prints += PrintSite.IntLocal(slot)
+                            emit(0xFC, prints.size - 1)
+                        }
+                    }
                 }
             }
             else -> {
@@ -277,7 +336,6 @@ internal class CodeGen {
     fun maxLocals() = nextLocal.coerceAtLeast(1)
 }
 
-
 internal class ClassFile(private val className: String) {
     fun build(cg: CodeGen): ByteArray {
         val p = Pool()
@@ -295,6 +353,7 @@ internal class ClassFile(private val className: String) {
         val strIdx = mutableMapOf<String, Int>()
         fun s(v: String) = strIdx.getOrPut(v) { p.string(p.utf8(v)) }
         cg.prints.filterIsInstance<CodeGen.PrintSite.Str>().forEach { s(it.s) }
+        cg.stringConsts.forEach { s(it) }
 
         val raw = cg.rawBytes().map { it.toInt() and 0xFF }
 
@@ -303,6 +362,7 @@ internal class ClassFile(private val className: String) {
             return when (site) {
                 is CodeGen.PrintSite.Str -> 8
                 is CodeGen.PrintSite.IntLocal -> 8
+                is CodeGen.PrintSite.StringLocal -> 8
                 is CodeGen.PrintSite.IntConst -> {
                     val v = site.v
                     val push = when (v) {
@@ -320,12 +380,10 @@ internal class ClassFile(private val className: String) {
         var oi = 0
         while (oi < raw.size) {
             map[oi] = ni
-            if (raw[oi] == 0xFC) {
-                ni += expandLen(oi)
-                oi += 2
-            } else {
-                ni += 1
-                oi += 1
+            when {
+                raw[oi] == 0xFC -> { ni += expandLen(oi); oi += 2 }
+                raw[oi] == 0xFD -> { ni += 2; oi += 2 } // ldc
+                else -> { ni += 1; oi += 1 }
             }
         }
         map[raw.size] = ni
@@ -333,50 +391,66 @@ internal class ClassFile(private val className: String) {
         val expanded = mutableListOf<Int>()
         oi = 0
         while (oi < raw.size) {
-            if (raw[oi] == 0xFC) {
-                val site = cg.prints[raw[oi + 1]]
-                expanded += 0xB2
-                expanded += (outF shr 8) and 0xFF
-                expanded += outF and 0xFF
-                when (site) {
-                    is CodeGen.PrintSite.Str -> {
-                        val si = s(site.s)
-                        expanded += 0x12
-                        expanded += si and 0xFF
-                        expanded += 0xB6
-                        expanded += (prStr shr 8) and 0xFF
-                        expanded += prStr and 0xFF
-                    }
-                    is CodeGen.PrintSite.IntConst -> {
-                        val v = site.v
-                        when (v) {
-                            in 0..5 -> expanded += 0x03 + v
-                            in -128..127 -> {
-                                expanded += 0x10
-                                expanded += v and 0xFF
-                            }
-                            else -> {
-                                expanded += 0x11
-                                expanded += (v shr 8) and 0xFF
-                                expanded += v and 0xFF
-                            }
+            when {
+                raw[oi] == 0xFC -> {
+                    val site = cg.prints[raw[oi + 1]]
+                    expanded += 0xB2
+                    expanded += (outF shr 8) and 0xFF
+                    expanded += outF and 0xFF
+                    when (site) {
+                        is CodeGen.PrintSite.Str -> {
+                            val si = s(site.s)
+                            expanded += 0x12
+                            expanded += si and 0xFF
+                            expanded += 0xB6
+                            expanded += (prStr shr 8) and 0xFF
+                            expanded += prStr and 0xFF
                         }
-                        expanded += 0xB6
-                        expanded += (prInt shr 8) and 0xFF
-                        expanded += prInt and 0xFF
+                        is CodeGen.PrintSite.IntConst -> {
+                            val v = site.v
+                            when (v) {
+                                in 0..5 -> expanded += 0x03 + v
+                                in -128..127 -> {
+                                    expanded += 0x10
+                                    expanded += v and 0xFF
+                                }
+                                else -> {
+                                    expanded += 0x11
+                                    expanded += (v shr 8) and 0xFF
+                                    expanded += v and 0xFF
+                                }
+                            }
+                            expanded += 0xB6
+                            expanded += (prInt shr 8) and 0xFF
+                            expanded += prInt and 0xFF
+                        }
+                        is CodeGen.PrintSite.IntLocal -> {
+                            expanded += 0x15
+                            expanded += site.slot
+                            expanded += 0xB6
+                            expanded += (prInt shr 8) and 0xFF
+                            expanded += prInt and 0xFF
+                        }
+                        is CodeGen.PrintSite.StringLocal -> {
+                            expanded += 0x19
+                            expanded += site.slot
+                            expanded += 0xB6
+                            expanded += (prStr shr 8) and 0xFF
+                            expanded += prStr and 0xFF
+                        }
                     }
-                    is CodeGen.PrintSite.IntLocal -> {
-                        expanded += 0x15
-                        expanded += site.slot
-                        expanded += 0xB6
-                        expanded += (prInt shr 8) and 0xFF
-                        expanded += prInt and 0xFF
-                    }
+                    oi += 2
                 }
-                oi += 2
-            } else {
-                expanded += raw[oi]
-                oi += 1
+                raw[oi] == 0xFD -> {
+                    val si = s(cg.stringConsts[raw[oi + 1]])
+                    expanded += 0x12
+                    expanded += si and 0xFF
+                    oi += 2
+                }
+                else -> {
+                    expanded += raw[oi]
+                    oi += 1
+                }
             }
         }
 
@@ -389,6 +463,9 @@ internal class ClassFile(private val className: String) {
             val op = raw[oi]
             if (op == 0xFC) {
                 ei += expandLen(oi)
+                oi += 2
+            } else if (op == 0xFD) {
+                ei += 2
                 oi += 2
             } else if (isBranch(op) && oi + 2 < raw.size) {
                 val oldOff = ((raw[oi + 1] shl 8) or raw[oi + 2]).toShort().toInt()
