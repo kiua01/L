@@ -6,10 +6,13 @@ It is designed from the ground up for:
 - Minecraft Java Edition modding (Fabric, Forge, NeoForge, Quilt, etc.)
 - High-performance Minecraft launchers (PC + Android)
 - **Bidirectional porting** between Bedrock Add-ons and Java Edition Mods
+- Modern, beautiful launcher and tool user interfaces
 - Cross-platform game tooling
 - Seamless interop with existing Java/Kotlin Minecraft codebases
 
 L has **full feature parity with Kotlin** while adding Minecraft-first ergonomics and powerful new capabilities.
+
+**One language. One extension (`.L`). Everything.**
 
 > Status: **Design / Early Specification** stage.
 
@@ -26,13 +29,23 @@ Write mods and launchers with modern language features, excellent concurrency, a
 
 L provides a unified high-level model that can target both ecosystems, with clear diagnostics when features differ.
 
-### 3. Lume — Modern UI Language
-A **derived language** (working name: **Lume**) specialized for building beautiful, modern launcher and tool interfaces.
+### 3. Modern UI (Built into L)
+Create very modern, beautiful, fluid interfaces for launchers and tools — all in the same language.
 
 - Declarative & reactive
 - Excellent desktop + Android support
-- Deep integration with L backend logic
-- Designed for very modern, fluid UIs
+- Deep integration with the rest of L
+- No separate UI language needed
+
+### 4. Single File Extension
+All L source files use **`.L`**:
+
+```
+Main.L              // mod
+RobotEntity.L       // cross-edition entity
+HomeScreen.L        // modern launcher UI
+LauncherCore.L      // shared launcher logic
+```
 
 ---
 
@@ -41,7 +54,7 @@ A **derived language** (working name: **Lume**) specialized for building beautif
 | Document | Description |
 |----------|-------------|
 | [Goals](docs/GOALS.md) | Primary goals and non-goals |
-| [Features](docs/FEATURES.md) | Cross-edition portability + Lume UI language |
+| [Features](docs/FEATURES.md) | Cross-edition portability + modern UI |
 | [Specification](docs/SPEC.md) | Early language specification draft |
 | [Syntax](docs/SYNTAX.md) | Kotlin parity + Minecraft DSL vision |
 | [Grammar](docs/GRAMMAR.md) | Formal grammar sketch |
@@ -57,10 +70,11 @@ A **derived language** (working name: **Lume**) specialized for building beautif
 |------|-------------|
 | Kotlin familiarity | 100% Kotlin syntax & feature set as baseline |
 | Minecraft modding | Built-in DSL support for registries, events, data generation, networking |
-| Launchers | Excellent concurrency + **Lume** for modern UIs |
+| Launchers | Excellent concurrency + modern UI capabilities |
 | Android Java Edition launchers | First-class Android target |
 | Bedrock ↔ Java porting | Unified model that can target both editions |
-| Modern language | Null safety, coroutines, multiplatform, sealed types, context receivers, etc. |
+| Modern UI | Declarative UI built directly into the language |
+| One language | Everything uses `.L` |
 
 ---
 
@@ -69,19 +83,22 @@ A **derived language** (working name: **Lume**) specialized for building beautif
 1. **Kotlin-first** — Full feature parity with Kotlin  
 2. **Minecraft-native** — Registries, events, networking, datagen DSLs  
 3. **Cross-edition** — One model, multiple targets (Java + Bedrock)  
-4. **Modern UI** — Lume for beautiful launcher interfaces  
+4. **Modern UI** — Beautiful interfaces written in the same language  
 5. **Performance** — Low-allocation APIs for game loops and launchers  
 6. **Multiplatform** — JVM + Android (+ future Native)  
 7. **Excellent interop** — Seamless with existing Java/Kotlin libraries  
+8. **One language, one extension** — `.L` for everything  
 
 ---
 
 ## Examples
 
-See the [`examples/`](examples/) directory:
+All examples use the **`.L`** extension:
 
-- [`simple-mod`](examples/simple-mod/) — Vision of a basic Fabric-style mod
-- [`launcher-core`](examples/launcher-core/) — Shared launcher logic for PC + Android
+- [`simple-mod`](examples/simple-mod/) — Basic Fabric-style mod
+- [`launcher-core`](examples/launcher-core/) — Shared launcher logic (PC + Android)
+- [`launcher-ui`](examples/launcher-ui/) — Modern launcher UI
+- [`cross-edition`](examples/cross-edition/) — Entity that targets Java + Bedrock
 
 ---
 
@@ -95,14 +112,16 @@ L/
 ├── LICENSE
 ├── docs/
 │   ├── GOALS.md
-│   ├── FEATURES.md      ← Cross-edition + Lume
+│   ├── FEATURES.md
 │   ├── SPEC.md
 │   ├── SYNTAX.md
 │   ├── GRAMMAR.md
 │   └── COMPILER.md
 └── examples/
     ├── simple-mod/
-    └── launcher-core/
+    ├── launcher-core/
+    ├── launcher-ui/
+    └── cross-edition/
 ```
 
 ---
@@ -115,14 +134,15 @@ L/
 - [x] Formal grammar sketch
 - [x] Compiler architecture notes
 - [x] Cross-edition portability vision
-- [x] Lume UI language vision
+- [x] Modern UI capabilities (built into L)
+- [x] Single `.L` file extension decision
 - [x] Roadmap
 - [x] Example sketches
 - [ ] Detailed type system outline
 - [ ] Standard library design
 - [ ] Compiler prototype
 - [ ] Minecraft DSL prototypes
-- [ ] Lume prototype
+- [ ] UI module prototype
 - [ ] Tooling (LSP, formatter, build plugin)
 
 ---
@@ -141,4 +161,5 @@ MIT License — see [LICENSE](LICENSE).
 
 ---
 
-**L** — One language family for the entire Minecraft creator and launcher ecosystem.
+**L** — One language for the entire Minecraft creator and launcher ecosystem.  
+**Everything ends with `.L`**
