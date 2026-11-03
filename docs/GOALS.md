@@ -28,11 +28,16 @@
    - Provide a unified high-level model that can target both ecosystems
    - Clear diagnostics and polyfills when features differ between editions
 
-6. **Modern UI Language Family**
-   - A derived language (**Lume**) specialized for building beautiful, modern launcher and tool interfaces
-   - Excellent support for desktop and Android
-   - Deep integration with L backend logic
-   - Declarative, reactive, and animation-friendly
+6. **Modern UI built into the language**
+   - First-class support for building beautiful, modern launcher and tool interfaces
+   - Declarative, reactive, animation-friendly UI capabilities
+   - Excellent desktop + Android support
+   - All in the same language — no separate UI language needed
+
+7. **One language, one extension**
+   - Everything is written in **L**
+   - All source files use the **`.L`** extension
+   - Mods, launchers, UI, cross-edition logic — all `.L`
 
 ## Non-Goals (for now)
 
@@ -40,11 +45,12 @@
 - Replacing the JVM (L targets the JVM primarily)
 - Inventing a completely new syntax that breaks Kotlin familiarity
 - Perfect 1:1 feature parity between Bedrock and Java (some differences are fundamental)
+- A separate UI language (UI is part of L)
 
 ## Success Metrics (long term)
 
 - Popular mods written in L
-- At least one high-quality public Minecraft launcher using L + Lume
-- Android Java Edition launcher(s) built with L + Lume
+- At least one high-quality public Minecraft launcher using L (including modern UI)
+- Android Java Edition launcher(s) built with L
 - Successful ports of real content between Bedrock and Java using L
-- Active community contributing to the language, Minecraft modules, and Lume
+- Active community contributing to the language and Minecraft modules
