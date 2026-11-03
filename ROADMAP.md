@@ -5,12 +5,13 @@
 - [x] High-level feature set (Kotlin parity + Minecraft focus)
 - [x] Formal grammar sketch
 - [x] Compiler architecture notes
+- [x] Type system outline
+- [x] Minecraft DSL design (registries, entities, events, packets, datagen)
 - [x] Cross-edition portability vision (Bedrock ↔ Java)
 - [x] Modern UI capabilities (built into L)
 - [x] Single language + `.L` file extension decision
-- [ ] Core type system outline (detailed)
-- [ ] Minecraft DSL requirements gathering (deeper)
-- [ ] Launcher + UI requirements (PC + Android)
+- [ ] Standard library design
+- [ ] Launcher + UI requirements (deeper)
 
 ## Phase 1 — Specification
 - [ ] Complete language specification (syntax + semantics)
