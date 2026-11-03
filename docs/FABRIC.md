@@ -1,7 +1,7 @@
 # L → Fabric Target (Current)
 
 > **Now:** Fabric only.  
-> **Later:** a new mod loader codenamed **Bear** (after the Fabric path is solid).
+> **Later:** **[Bear](https://github.com/kiua01/bear)** — new mod loader (design started; after Fabric path is solid).
 
 ## Goals
 
