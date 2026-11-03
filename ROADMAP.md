@@ -3,9 +3,10 @@
 ## Phase 0 — Vision & Design (Current)
 - [x] Language vision and goals
 - [x] High-level feature set (Kotlin parity + Minecraft focus)
-- [ ] Formal grammar sketch
-- [ ] Core type system outline
-- [ ] Minecraft DSL requirements gathering
+- [x] Formal grammar sketch
+- [x] Compiler architecture notes
+- [ ] Core type system outline (detailed)
+- [ ] Minecraft DSL requirements gathering (deeper)
 - [ ] Launcher requirements (PC + Android)
 
 ## Phase 1 — Specification
