@@ -1,6 +1,6 @@
 // examples/hello/Hello.L
-// Minimal program for the JVM backend prototype
 
 fun main() {
-    // compiles to a class that prints "Hello from L!"
+    println("Hello from L!")
+    println("Compiler prototype 0.0.4")
 }
