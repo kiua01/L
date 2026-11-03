@@ -19,18 +19,17 @@ Full **Kotlin feature parity**, plus domain power.
 | **`.le`** | Websites and web 3D |
 
 > **Design phase: complete.**  
-> **Compiler prototype: started** (lexer + minimal parser + CLI).
+> **Compiler prototype: 0.0.7** (if/while/when, JVM codegen, Gradle wrapper).
 
 ---
 
-## Compiler prototype
+## Compiler prototype (0.0.7)
 
 ```bash
-cd compiler
-# with Gradle:
-./gradlew run --args="lex ../examples/simple-mod/Main.L"
-./gradlew run --args="parse ../examples/simple-mod/Main.L"
-./gradlew test
+chmod +x gradlew
+./gradlew :compiler:test
+./gradlew :compiler:run --args="compile examples/hello/Hello.L out Main"
+java -cp out Main
 ```
 
 See [compiler/README.md](compiler/README.md).
