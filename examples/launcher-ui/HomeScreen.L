@@ -1,0 +1,93 @@
+// examples/launcher-ui/HomeScreen.L
+// Modern launcher UI written in L (UI is part of the language)
+
+@Composable
+fun HomeScreen(state: LauncherViewModel) {
+    Screen(
+        background = MaterialTheme.colors.background
+    ) {
+        Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+
+            // Top bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "L Launcher",
+                    style = MaterialTheme.typography.headlineLarge
+                )
+
+                IconButton(onClick = { state.openSettings() }) {
+                    Icon(Icons.Settings)
+                }
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+            // Instance grid
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 160.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(state.instances) { instance ->
+                    InstanceCard(
+                        instance = instance,
+                        onClick = { state.launch(instance) },
+                        onEdit = { state.edit(instance) }
+                    )
+                }
+
+                // "Create new" card
+                item {
+                    CreateInstanceCard(
+                        onClick = { state.createNewInstance() }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun InstanceCard(
+    instance: Instance,
+    onClick: () -> Unit,
+    onEdit: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .aspectRatio(1f)
+            .hoverable()
+            .animateContentSize()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            AsyncImage(
+                model = instance.icon,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+
+            Text(
+                text = instance.name,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1
+            )
+
+            Text(
+                text = instance.version.displayName,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colors.onSurfaceVariant
+            )
+        }
+    }
+}
