@@ -3,7 +3,7 @@
 **L** is a modern programming language purpose-built for the Minecraft ecosystem — and beyond.
 
 ### What L is for
-- Minecraft Java Edition modding (Fabric, Forge, NeoForge, Quilt, …)
+- Minecraft Java Edition modding (**Fabric first**; **Bear** loader later)
 - Minecraft launchers (PC + Android)
 - Bedrock Add-on ↔ Java Mod portability
 - Modern desktop & mobile UI
@@ -21,7 +21,7 @@ Full **Kotlin feature parity**, plus domain power.
 | **`.le`** | Websites and web 3D |
 
 > **Design phase: complete.**  
-> **Compiler prototype: 0.0.11** (if/while/when, JVM codegen, Gradle wrapper).
+> **Compiler prototype: 0.0.14** (Fabric-only Minecraft target; Bear later) (if/while/when, JVM codegen, Gradle wrapper).
 
 ---
 
@@ -44,6 +44,7 @@ See [compiler/README.md](compiler/README.md).
 |-----|-------------|
 | [Overview](docs/OVERVIEW.md) | Start here — FAQ & reading order |
 | [Language Style](docs/LANGUAGE_STYLE.md) | Full English + modern abbreviated keywords |
+| [Fabric](docs/FABRIC.md) | Fabric-only mod target (Bear loader later) |
 | [Goals](docs/GOALS.md) | Goals and non-goals |
 | [Features](docs/FEATURES.md) | Major capabilities |
 | [Specification](docs/SPEC.md) | Language spec draft |
