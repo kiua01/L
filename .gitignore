@@ -5,6 +5,8 @@ dist/
 *.class
 *.jar
 *.war
+.gradle/
+**/build/
 
 # IDE
 .idea/
