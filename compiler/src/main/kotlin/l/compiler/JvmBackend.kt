@@ -96,6 +96,11 @@ internal class CodeGen {
         is Expr.Ident -> localTypes[e.name] ?: "Int"
         is Expr.Binary -> when (e.op) {
             "==", "!=", "<", ">", "<=", ">=", "&&", "||" -> "Boolean"
+            "+" -> {
+                val l = inferExprType(e.left)
+                val r = inferExprType(e.right)
+                if (l == "String" || r == "String") "String" else "Int"
+            }
             else -> "Int"
         }
         is Expr.Unary -> if (e.op == "!") "Boolean" else "Int"
