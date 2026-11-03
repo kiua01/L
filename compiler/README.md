@@ -1,48 +1,37 @@
-# L Compiler Prototype 0.0.3
+# L Compiler Prototype 0.0.4
 
 ## Status
 
 | Component | Status |
 |-----------|--------|
 | Lexer | Working |
-| Parser | Expressions + statements + declarations subset |
-| Diagnostics | Errors/warnings with positions |
+| Parser | Declarations + expressions + `if` / `while` |
+| Diagnostics | Yes |
 | Resolver | Symbol table |
-| Type checker | Literals, locals, simple returns / mismatches |
-| JVM backend | Minimal class emitter (`main` → prints greeting) |
+| Type checker | Locals, returns, conditions, `println` |
+| JVM backend | AST-driven `println("...")` sequences |
 
 ## Commands
 
 ```bash
-./gradlew :compiler:run --args="lex <file>"
-./gradlew :compiler:run --args="parse <file>"
-./gradlew :compiler:run --args="resolve <file>"
-./gradlew :compiler:run --args="check <file>"
+./gradlew :compiler:run --args="check examples/hello/Hello.L"
 ./gradlew :compiler:run --args="compile examples/hello/Hello.L out Main"
+java -cp out Main
 ./gradlew :compiler:test
 ```
 
-After compile:
+## Supported codegen (tiny)
 
-```bash
-java -cp out Main
-# Hello from L!
-```
-
-## Pipeline
-
-```
-Source .L / .le
-  → Lexer
-  → Parser (+ diagnostics)
-  → Resolver
-  → TypeChecker
-  → JvmBackend (tiny subset)
+```l
+fun main() {
+    println("Hello from L!")
+    println("Compiler prototype 0.0.4")
+}
 ```
 
 ## Next
 
-- Real codegen from AST (not stub main)
-- Control flow (if/when/while)
-- Better standard types and calls
-- Gradle wrapper in repo
+- Real JVM branching for `if` / `while`
+- Local variables in bytecode
+- Integer arithmetic codegen
+- `when` expression
