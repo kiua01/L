@@ -19,7 +19,21 @@ Full **Kotlin feature parity**, plus domain power.
 | **`.le`** | Websites and web 3D |
 
 > **Design phase: complete.**  
-> Next: compiler & runtime prototypes.
+> **Compiler prototype: started** (lexer + minimal parser + CLI).
+
+---
+
+## Compiler prototype
+
+```bash
+cd compiler
+# with Gradle:
+./gradlew run --args="lex ../examples/simple-mod/Main.L"
+./gradlew run --args="parse ../examples/simple-mod/Main.L"
+./gradlew test
+```
+
+See [compiler/README.md](compiler/README.md).
 
 ---
 
@@ -46,7 +60,7 @@ Full **Kotlin feature parity**, plus domain power.
 | [Compiler](docs/COMPILER.md) | Compiler architecture |
 | [Tooling](docs/TOOLING.md) | CLI, LSP, formatter, build |
 | [Packaging](docs/PACKAGING.md) | Jars, Android, web distribution |
-| [Roadmap](ROADMAP.md) | Phases after design |
+| [Roadmap](ROADMAP.md) | Implementation phases |
 | [Contributing](CONTRIBUTING.md) | How to contribute |
 
 ---
@@ -63,22 +77,6 @@ examples/
     ├── HomePage.le
     └── ProductViewer3D.le
 ```
-
----
-
-## Design status
-
-Phase 0 (Vision & Design) is **finished**:
-
-- Language vision, goals, features
-- Spec, types, grammar, syntax
-- Minecraft DSLs + cross-edition mapping
-- UI, 3D, web (including 3D websites)
-- Stdlib, targets, interop, diagnostics
-- Compiler architecture, tooling, packaging
-- File extensions: `.L` and `.le`
-
-Next work is implementation (compiler prototype, runtimes, tooling).
 
 ---
 
