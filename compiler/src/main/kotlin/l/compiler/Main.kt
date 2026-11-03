@@ -18,8 +18,8 @@ fun main(args: Array<String>) {
         }
         "parse" -> {
             val path = args.getOrNull(1) ?: return printUsage()
-            val diagnostics = DiagnosticBag()
-            val ast = Parser(Lexer(File(path).readText()).tokenize(), diagnostics).parseFile()
+            val r = CompilerPipeline.analyzeFile(path)
+            val ast = r.ast
             println("package: ${ast.packageName ?: "<none>"}")
             if (ast.imports.isNotEmpty()) {
                 println("imports:")
@@ -27,57 +27,47 @@ fun main(args: Array<String>) {
             }
             println("declarations: ${ast.declarations.size}")
             printDecls(ast.declarations, "  ")
-            if (diagnostics.diagnostics.isNotEmpty()) {
+            if (r.diagnostics.diagnostics.isNotEmpty()) {
                 println("\ndiagnostics:")
-                diagnostics.printAll()
+                r.diagnostics.printAll()
             }
         }
         "resolve" -> {
             val path = args.getOrNull(1) ?: return printUsage()
-            val diagnostics = DiagnosticBag()
-            val ast = Parser(Lexer(File(path).readText()).tokenize(), diagnostics).parseFile()
-            val symbols = Resolver(diagnostics).resolve(ast)
-            println("symbols (${symbols.size}):")
-            symbols.forEach { s ->
+            val r = CompilerPipeline.analyzeFile(path)
+            println("symbols (${r.symbols.size}):")
+            r.symbols.forEach { s ->
                 println("  ${s.kind}\t${s.owner?.let { "$it." } ?: ""}${s.name}")
             }
-            if (diagnostics.diagnostics.isNotEmpty()) {
+            if (r.diagnostics.diagnostics.isNotEmpty()) {
                 println("\ndiagnostics:")
-                diagnostics.printAll()
+                r.diagnostics.printAll()
             }
         }
         "check" -> {
             val path = args.getOrNull(1) ?: return printUsage()
-            val diagnostics = DiagnosticBag()
-            val ast = Parser(Lexer(File(path).readText()).tokenize(), diagnostics).parseFile()
-            Resolver(diagnostics).resolve(ast)
-            TypeChecker(diagnostics).check(ast)
-            if (diagnostics.hasErrors) {
-                diagnostics.printAll()
+            val r = CompilerPipeline.analyzeFile(path)
+            if (r.diagnostics.hasErrors) {
+                r.diagnostics.printAll()
                 kotlin.system.exitProcess(1)
             } else {
                 println("OK — no errors")
-                diagnostics.printAll()
+                r.diagnostics.printAll()
             }
         }
         "compile" -> {
             val path = args.getOrNull(1) ?: return printUsage()
             val outDir = File(args.getOrNull(2) ?: "out")
             val className = args.getOrNull(3) ?: "Main"
-            val diagnostics = DiagnosticBag()
-            val source = File(path).readText()
-            val ast = Parser(Lexer(source).tokenize(), diagnostics).parseFile()
-            Resolver(diagnostics).resolve(ast)
-            TypeChecker(diagnostics).check(ast)
-            if (diagnostics.hasErrors) {
-                diagnostics.printAll()
+            val r = CompilerPipeline.compileFile(path, outDir, className)
+            if (r.diagnostics.hasErrors) {
+                r.diagnostics.printAll()
                 kotlin.system.exitProcess(1)
             }
-            JvmBackend().emit(ast, className, outDir)
             println("Wrote $outDir/$className.class")
             println("Run: java -cp $outDir $className")
         }
-        "version" -> println("L compiler prototype 0.0.6")
+        "version" -> println("L compiler prototype 0.0.7")
         else -> printUsage()
     }
 }
@@ -102,7 +92,7 @@ private fun printDecls(decls: List<Decl>, indent: String) {
 private fun printUsage() {
     println(
         """
-        |L compiler prototype 0.0.6
+        |L compiler prototype 0.0.7
         |
         |  l lex <file>
         |  l parse <file>
