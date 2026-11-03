@@ -1,0 +1,35 @@
+// examples/website/HomePage.le
+// Modern website page written in L (web files use .le)
+
+@page
+fun HomePage() {
+    Html {
+        Head {
+            Title("L — 3D & Minecraft Language")
+            Meta(name = "viewport", content = "width=device-width, initial-scale=1")
+        }
+        Body {
+            NavBar()
+            HeroSection()
+            FeatureGrid()
+            ProductViewer3D(model = "/models/robot.glb")
+            Footer()
+        }
+    }
+}
+
+@Composable
+fun HeroSection() {
+    Section(modifier = Modifier.fillMaxWidth().padding(48.px)) {
+        Column(horizontalAlignment = Alignment.Center) {
+            Text(
+                "One language for mods, launchers, UI, 3D and the web",
+                style = Typography.HeadlineLarge
+            )
+            Spacer(Modifier.height(16.px))
+            Button(onClick = { /* get started */ }) {
+                Text("Get Started")
+            }
+        }
+    }
+}
