@@ -103,7 +103,15 @@ val same = "example:cool_stone".id
 
 ## File Extension
 
-Proposed: `.l` or `.lt` (to be decided)
+**All L source files use the `.L` extension** (uppercase).
+
+Examples:
+- `Main.L`
+- `RobotEntity.L`
+- `HomeScreen.L`
+- `LauncherCore.L`
+
+One language. One extension. Everything.
 
 ## Comments
 
