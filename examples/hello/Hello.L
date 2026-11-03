@@ -11,12 +11,12 @@ fun main() {
         println("boolean ok")
     }
 
-    val name = "L language"
-    println(name)
+    val name = "L"
+    val greeting = "Hello, " + name + "!"
+    println(greeting)
 
     when (x) {
         10 -> println("x is 10")
-        20 -> println("x is 20")
         else -> println("other")
     }
 }
