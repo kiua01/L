@@ -215,11 +215,20 @@ internal class CodeGen {
                 }
             }
             is Expr.Binary -> when (e.op) {
-                "+", "-", "*", "/" -> {
-                    // string + not supported in codegen yet
+                "+" -> {
+                    val lt = inferExprType(e.left)
+                    val rt = inferExprType(e.right)
+                    if (lt == "String" || rt == "String") {
+                        emitStringConcat(e.left, e.right)
+                    } else {
+                        emitExpr(e.left); emitExpr(e.right)
+                        emit(0x60)
+                    }
+                }
+                "-", "*", "/" -> {
                     emitExpr(e.left); emitExpr(e.right)
                     emit(when (e.op) {
-                        "+" -> 0x60; "-" -> 0x64; "*" -> 0x68; else -> 0x6C
+                        "-" -> 0x64; "*" -> 0x68; else -> 0x6C
                     })
                 }
                 "==", "!=", "<", ">", "<=", ">=" -> {
@@ -349,30 +358,52 @@ internal class ClassFile(private val className: String) {
         val psC = p.cls(p.utf8("java/io/PrintStream"))
         val prStr = p.method(psC, p.nat(p.utf8("println"), p.utf8("(Ljava/lang/String;)V")))
         val prInt = p.method(psC, p.nat(p.utf8("println"), p.utf8("(I)V")))
+        val sbC = p.cls(p.utf8("java/lang/StringBuilder"))
+        val sbInit = p.method(sbC, p.nat(p.utf8("<init>"), p.utf8("()V")))
+        val sbAppendStr = p.method(sbC, p.nat(p.utf8("append"), p.utf8("(Ljava/lang/String;)Ljava/lang/StringBuilder;")))
+        val sbAppendInt = p.method(sbC, p.nat(p.utf8("append"), p.utf8("(I)Ljava/lang/StringBuilder;")))
+        val sbToString = p.method(sbC, p.nat(p.utf8("toString"), p.utf8("()Ljava/lang/String;")))
+
 
         val strIdx = mutableMapOf<String, Int>()
         fun s(v: String) = strIdx.getOrPut(v) { p.string(p.utf8(v)) }
         cg.prints.filterIsInstance<CodeGen.PrintSite.Str>().forEach { s(it.s) }
         cg.stringConsts.forEach { s(it) }
 
+
         val raw = cg.rawBytes().map { it.toInt() and 0xFF }
 
-        fun expandLen(idx: Int): Int {
-            val site = cg.prints[raw[idx + 1]]
-            return when (site) {
-                is CodeGen.PrintSite.Str -> 8
-                is CodeGen.PrintSite.IntLocal -> 8
-                is CodeGen.PrintSite.StringLocal -> 8
-                is CodeGen.PrintSite.IntConst -> {
-                    val v = site.v
-                    val push = when (v) {
-                        in 0..5 -> 1
-                        in -128..127 -> 2
-                        else -> 3
+        fun expandLen(oi: Int): Int {
+            return when (raw[oi]) {
+                0xFC -> when (val site = cg.prints[raw[oi + 1]]) {
+                    is CodeGen.PrintSite.Str -> 8
+                    is CodeGen.PrintSite.IntLocal -> 8
+                    is CodeGen.PrintSite.StringLocal -> 8
+                    is CodeGen.PrintSite.IntConst -> {
+                        val v = site.v
+                        val push = when (v) {
+                            in 0..5 -> 1
+                            in -128..127 -> 2
+                            else -> 3
+                        }
+                        3 + push + 3
                     }
-                    3 + push + 3
                 }
+                0xFD -> 2 // ldc
+                0xFA -> 8 // new + dup + invokespecial
+                0xF9 -> 6 // ldc + append string
+                0xF8 -> 6 // aload + append string
+                0xF5 -> 6 // bipush + append int (approx)
+                0xF4 -> 6 // iload + append int
+                0xF6 -> 3 // toString
+                else -> 1
             }
+        }
+
+        fun markerWidth(op: Int): Int = when (op) {
+            0xFC, 0xFD, 0xF9, 0xF8, 0xF5, 0xF4 -> 2
+            0xFA, 0xF6 -> 1
+            else -> 1
         }
 
         val map = IntArray(raw.size + 1)
@@ -380,10 +411,13 @@ internal class ClassFile(private val className: String) {
         var oi = 0
         while (oi < raw.size) {
             map[oi] = ni
-            when {
-                raw[oi] == 0xFC -> { ni += expandLen(oi); oi += 2 }
-                raw[oi] == 0xFD -> { ni += 2; oi += 2 } // ldc
-                else -> { ni += 1; oi += 1 }
+            val op = raw[oi]
+            if (op in listOf(0xFC, 0xFD, 0xFA, 0xF9, 0xF8, 0xF5, 0xF4, 0xF6)) {
+                ni += expandLen(oi)
+                oi += markerWidth(op)
+            } else {
+                ni += 1
+                oi += 1
             }
         }
         map[raw.size] = ni
@@ -391,8 +425,8 @@ internal class ClassFile(private val className: String) {
         val expanded = mutableListOf<Int>()
         oi = 0
         while (oi < raw.size) {
-            when {
-                raw[oi] == 0xFC -> {
+            when (val op = raw[oi]) {
+                0xFC -> {
                     val site = cg.prints[raw[oi + 1]]
                     expanded += 0xB2
                     expanded += (outF shr 8) and 0xFF
@@ -400,55 +434,68 @@ internal class ClassFile(private val className: String) {
                     when (site) {
                         is CodeGen.PrintSite.Str -> {
                             val si = s(site.s)
-                            expanded += 0x12
-                            expanded += si and 0xFF
-                            expanded += 0xB6
-                            expanded += (prStr shr 8) and 0xFF
-                            expanded += prStr and 0xFF
+                            expanded += 0x12; expanded += si and 0xFF
+                            expanded += 0xB6; expanded += (prStr shr 8) and 0xFF; expanded += prStr and 0xFF
                         }
                         is CodeGen.PrintSite.IntConst -> {
                             val v = site.v
                             when (v) {
                                 in 0..5 -> expanded += 0x03 + v
-                                in -128..127 -> {
-                                    expanded += 0x10
-                                    expanded += v and 0xFF
-                                }
-                                else -> {
-                                    expanded += 0x11
-                                    expanded += (v shr 8) and 0xFF
-                                    expanded += v and 0xFF
-                                }
+                                in -128..127 -> { expanded += 0x10; expanded += v and 0xFF }
+                                else -> { expanded += 0x11; expanded += (v shr 8) and 0xFF; expanded += v and 0xFF }
                             }
-                            expanded += 0xB6
-                            expanded += (prInt shr 8) and 0xFF
-                            expanded += prInt and 0xFF
+                            expanded += 0xB6; expanded += (prInt shr 8) and 0xFF; expanded += prInt and 0xFF
                         }
                         is CodeGen.PrintSite.IntLocal -> {
-                            expanded += 0x15
-                            expanded += site.slot
-                            expanded += 0xB6
-                            expanded += (prInt shr 8) and 0xFF
-                            expanded += prInt and 0xFF
+                            expanded += 0x15; expanded += site.slot
+                            expanded += 0xB6; expanded += (prInt shr 8) and 0xFF; expanded += prInt and 0xFF
                         }
                         is CodeGen.PrintSite.StringLocal -> {
-                            expanded += 0x19
-                            expanded += site.slot
-                            expanded += 0xB6
-                            expanded += (prStr shr 8) and 0xFF
-                            expanded += prStr and 0xFF
+                            expanded += 0x19; expanded += site.slot
+                            expanded += 0xB6; expanded += (prStr shr 8) and 0xFF; expanded += prStr and 0xFF
                         }
                     }
                     oi += 2
                 }
-                raw[oi] == 0xFD -> {
+                0xFD -> {
                     val si = s(cg.stringConsts[raw[oi + 1]])
-                    expanded += 0x12
-                    expanded += si and 0xFF
+                    expanded += 0x12; expanded += si and 0xFF
                     oi += 2
                 }
+                0xFA -> {
+                    // new StringBuilder; dup; invokespecial <init>
+                    expanded += 0xBB; expanded += (sbC shr 8) and 0xFF; expanded += sbC and 0xFF
+                    expanded += 0x59 // dup
+                    expanded += 0xB7; expanded += (sbInit shr 8) and 0xFF; expanded += sbInit and 0xFF
+                    oi += 1
+                }
+                0xF9 -> {
+                    val si = s(cg.stringConsts[raw[oi + 1]])
+                    expanded += 0x12; expanded += si and 0xFF
+                    expanded += 0xB6; expanded += (sbAppendStr shr 8) and 0xFF; expanded += sbAppendStr and 0xFF
+                    oi += 2
+                }
+                0xF8 -> {
+                    expanded += 0x19; expanded += raw[oi + 1]
+                    expanded += 0xB6; expanded += (sbAppendStr shr 8) and 0xFF; expanded += sbAppendStr and 0xFF
+                    oi += 2
+                }
+                0xF5 -> {
+                    expanded += 0x10; expanded += raw[oi + 1]
+                    expanded += 0xB6; expanded += (sbAppendInt shr 8) and 0xFF; expanded += sbAppendInt and 0xFF
+                    oi += 2
+                }
+                0xF4 -> {
+                    expanded += 0x15; expanded += raw[oi + 1]
+                    expanded += 0xB6; expanded += (sbAppendInt shr 8) and 0xFF; expanded += sbAppendInt and 0xFF
+                    oi += 2
+                }
+                0xF6 -> {
+                    expanded += 0xB6; expanded += (sbToString shr 8) and 0xFF; expanded += sbToString and 0xFF
+                    oi += 1
+                }
                 else -> {
-                    expanded += raw[oi]
+                    expanded += op
                     oi += 1
                 }
             }
@@ -461,12 +508,9 @@ internal class ClassFile(private val className: String) {
         var ei = 0
         while (oi < raw.size) {
             val op = raw[oi]
-            if (op == 0xFC) {
+            if (op in listOf(0xFC, 0xFD, 0xFA, 0xF9, 0xF8, 0xF5, 0xF4, 0xF6)) {
                 ei += expandLen(oi)
-                oi += 2
-            } else if (op == 0xFD) {
-                ei += 2
-                oi += 2
+                oi += markerWidth(op)
             } else if (isBranch(op) && oi + 2 < raw.size) {
                 val oldOff = ((raw[oi + 1] shl 8) or raw[oi + 2]).toShort().toInt()
                 val targetOld = (oi + oldOff).coerceIn(0, raw.size)
