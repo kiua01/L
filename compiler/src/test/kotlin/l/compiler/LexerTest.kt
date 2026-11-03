@@ -5,11 +5,12 @@ import kotlin.test.assertTrue
 
 class CompilerTests {
     @Test
-    fun objectEmitsSeparateClass() {
+    fun objectFields() {
         val source = """
-            obj Util {
-                fn double(x: Int): Int {
-                    ret x + x
+            obj Counter {
+                mut count = 0
+                fn get(): Int {
+                    ret count
                 }
             }
             fn main() {
@@ -20,6 +21,6 @@ class CompilerTests {
         val dir = java.io.File.createTempFile("lout", "").apply { delete(); mkdir() }
         JvmBackend().emit(r.ast, "Main", dir)
         assertTrue(java.io.File(dir, "Main.class").exists())
-        assertTrue(java.io.File(dir, "Util.class").exists())
+        assertTrue(java.io.File(dir, "Counter.class").exists())
     }
 }
