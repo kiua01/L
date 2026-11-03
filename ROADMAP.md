@@ -6,20 +6,20 @@
 - [x] Formal grammar sketch
 - [x] Compiler architecture notes
 - [x] Type system outline
+- [x] Standard library outline
 - [x] Minecraft DSL design (registries, entities, events, packets, datagen)
+- [x] UI module specification
 - [x] Cross-edition portability vision (Bedrock ↔ Java)
 - [x] Modern UI capabilities (built into L)
 - [x] Single language + `.L` file extension decision
-- [ ] Standard library design
-- [ ] Launcher + UI requirements (deeper)
+- [ ] Cross-edition capability mapping (detailed)
+- [ ] Launcher requirements (deeper)
 
 ## Phase 1 — Specification
 - [ ] Complete language specification (syntax + semantics)
-- [ ] Standard library design
 - [ ] Interop rules with Java & Kotlin
 - [ ] Multiplatform target design (JVM primary, Android secondary)
 - [ ] Cross-edition capability mapping design
-- [ ] UI module specification (declarative components, reactivity, animation)
 - [ ] Error handling and diagnostics design
 
 ## Phase 2 — Compiler Prototype
