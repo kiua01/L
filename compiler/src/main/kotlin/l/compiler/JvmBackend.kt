@@ -1,50 +1,61 @@
-package l.compiler
-
-import java.io.ByteArrayOutputStream
-import java.io.DataOutputStream
-import java.io.File
-
-/**
- * JVM backend 0.0.10
- * - multiple top-level functions as public static methods
- * - calls between them (Int/Boolean/String/Unit, simple params)
- * - string concat, println, if/while/when, locals
- */
 class JvmBackend {
     fun emit(file: AstNode.File, className: String, outputDir: File) {
         outputDir.mkdirs()
-        // Top-level functions → main class
-        emitClass(className, collectTopLevelFunctions(file), outputDir, ensureMain = true)
-        // Top-level object/class with function members → separate .class files
+        emitClass(
+            className,
+            collectTopLevelFunctions(file),
+            emptyList(),
+            outputDir,
+            ensureMain = true
+        )
         for (d in file.declarations) {
-            if (d is Decl.ClassLike && (d.kind.contains("object") || d.kind == "class" || d.kind.contains("class"))) {
+            if (d is Decl.ClassLike && (d.kind.contains("object") || d.kind.contains("class"))) {
                 val fns = d.members.filterIsInstance<Decl.Function>()
-                if (fns.isNotEmpty()) {
-                    emitClass(d.name, fns, outputDir, ensureMain = false)
+                val fields = d.members.filterIsInstance<Decl.Property>().map { propToField(it) }
+                if (fns.isNotEmpty() || fields.isNotEmpty()) {
+                    emitClass(d.name, fns, fields, outputDir, ensureMain = false)
                 }
             }
         }
     }
 
+    private fun propToField(p: Decl.Property): FieldEmit {
+        val ty = p.type ?: when (val init = p.initializer) {
+            is Expr.Literal -> when (init.kind) {
+                LitKind.STRING -> "String"
+                LitKind.BOOL -> "Boolean"
+                else -> "Int"
+            }
+            else -> "Int"
+        }
+        val initLit = (p.initializer as? Expr.Literal)
+        return FieldEmit(p.name, ty, initLit?.value, initLit?.kind)
+    }
+
     private fun emitClass(
         className: String,
         functions: List<Decl.Function>,
+        fields: List<FieldEmit>,
         outputDir: File,
         ensureMain: Boolean
     ) {
-        if (functions.isEmpty() && ensureMain) {
-            val cg = CodeGen(emptyMap())
+        if (functions.isEmpty() && fields.isEmpty() && ensureMain) {
+            val cg = CodeGen(emptyMap(), emptyMap())
             cg.emitReturn()
             File(outputDir, "$className.class").writeBytes(
-                ClassFile(className).build(listOf(MethodEmit("main", "([Ljava/lang/String;)V", cg)))
+                ClassFile(className).build(
+                    listOf(MethodEmit("main", "([Ljava/lang/String;)V", cg)),
+                    emptyList()
+                )
             )
             return
         }
-        if (functions.isEmpty()) return
+        if (functions.isEmpty() && fields.isEmpty()) return
 
         val sigs = functions.associate { it.name to descriptorOf(it) }
+        val fieldMap = fields.associate { it.name to it }
         val methods = functions.map { fn ->
-            val cg = CodeGen(sigs)
+            val cg = CodeGen(sigs, fieldMap)
             if (fn.name == "main") {
                 cg.reserveMainArgs()
             } else {
@@ -57,11 +68,22 @@ class JvmBackend {
             MethodEmit(fn.name, sigs[fn.name] ?: "()V", cg)
         }
         val all = if (ensureMain && methods.none { it.name == "main" }) {
-            val cg = CodeGen(sigs)
+            val cg = CodeGen(sigs, fieldMap)
             cg.emitReturn()
             methods + MethodEmit("main", "([Ljava/lang/String;)V", cg)
         } else methods
-        File(outputDir, "$className.class").writeBytes(ClassFile(className).build(all))
+
+        // <clinit> for field initializers
+        val withClinit = if (fields.any { it.initValue != null }) {
+            val cg = CodeGen(sigs, fieldMap)
+            for (f in fields) {
+                if (f.initValue != null) cg.emitFieldInit(f)
+            }
+            cg.emitReturn()
+            all + MethodEmit("<clinit>", "()V", cg)
+        } else all
+
+        File(outputDir, "$className.class").writeBytes(ClassFile(className).build(withClinit, fields))
     }
 
     private fun collectTopLevelFunctions(file: AstNode.File): List<Decl.Function> =
@@ -86,7 +108,17 @@ class JvmBackend {
 
 data class MethodEmit(val name: String, val descriptor: String, val cg: CodeGen)
 
-internal class CodeGen(private val functionSigs: Map<String, String>) {
+data class FieldEmit(
+    val name: String,
+    val type: String,
+    val initValue: String?,
+    val initKind: LitKind?
+)
+
+internal class CodeGen(
+    private val functionSigs: Map<String, String>,
+    private val fields: Map<String, FieldEmit> = emptyMap()
+) {
     private val code = mutableListOf<Int>()
     private val locals = linkedMapOf<String, Int>()
     private val localTypes = linkedMapOf<String, String>()
@@ -95,6 +127,9 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
     val prints = mutableListOf<PrintSite>()
     val stringConsts = mutableListOf<String>()
     val calls = mutableListOf<CallSite>() // method call markers
+    val fieldAccess = mutableListOf<FieldAccess>()
+
+    data class FieldAccess(val name: String, val put: Boolean)
 
     data class CallSite(val name: String, val descriptor: String)
 
@@ -146,6 +181,30 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
     fun emitReturn() {
         emit(0xB1)
     }
+
+    fun emitFieldInit(f: FieldEmit) {
+        when (f.type) {
+            "String" -> {
+                stringConsts += f.initValue ?: ""
+                emit(0xFD, stringConsts.size - 1)
+                fieldAccess += FieldAccess(f.name, put = true)
+                emit(0xED, fieldAccess.size - 1)
+            }
+            else -> {
+                val v = f.initValue?.toIntOrNull() ?: 0
+                // push int
+                when (v) {
+                    -1 -> emit(0x02)
+                    in 0..5 -> emit(0x03 + v)
+                    in -128..127 -> emit(0x10, v)
+                    else -> emit(0x11, (v shr 8) and 0xFF, v and 0xFF)
+                }
+                fieldAccess += FieldAccess(f.name, put = true)
+                emit(0xED, fieldAccess.size - 1)
+            }
+        }
+    }
+
 
     private fun patch() {
         for (l in labels) {
@@ -284,10 +343,18 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
             }
             is Expr.Ident -> {
                 val slot = locals[e.name]
-                val ty = localTypes[e.name] ?: "Int"
-                if (slot != null) {
-                    if (ty == "String") emit(0x19, slot) else emit(0x15, slot)
-                } else emit(0x03)
+                val ty = localTypes[e.name]
+                when {
+                    slot != null -> {
+                        val t = ty ?: "Int"
+                        if (t == "String") emit(0x19, slot) else emit(0x15, slot)
+                    }
+                    fields.containsKey(e.name) -> {
+                        fieldAccess += FieldAccess(e.name, put = false)
+                        emit(0xEC, fieldAccess.size - 1)
+                    }
+                    else -> emit(0x03)
+                }
             }
             is Expr.Unary -> {
                 emitExpr(e.expr)
@@ -351,13 +418,22 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
             }
             is Expr.Assign -> {
                 if (e.target is Expr.Ident) {
-                    val ty = localTypes[e.target.name] ?: inferExprType(e.value)
-                    val slot = allocLocal(e.target.name, ty)
-                    emitExpr(e.value)
-                    if (ty == "String") {
-                        emit(0x3A, slot); emit(0x19, slot)
+                    val name = e.target.name
+                    if (fields.containsKey(name) && !locals.containsKey(name)) {
+                        emitExpr(e.value)
+                        fieldAccess += FieldAccess(name, put = true)
+                        emit(0xED, fieldAccess.size - 1)
+                        fieldAccess += FieldAccess(name, put = false)
+                        emit(0xEC, fieldAccess.size - 1)
                     } else {
-                        emit(0x36, slot); emit(0x15, slot)
+                        val ty = localTypes[name] ?: inferExprType(e.value)
+                        val slot = allocLocal(name, ty)
+                        emitExpr(e.value)
+                        if (ty == "String") {
+                            emit(0x3A, slot); emit(0x19, slot)
+                        } else {
+                            emit(0x36, slot); emit(0x15, slot)
+                        }
                     }
                 } else emitExpr(e.value)
             }
@@ -455,7 +531,7 @@ internal class CodeGen(private val functionSigs: Map<String, String>) {
 }
 
 internal class ClassFile(private val className: String) {
-    fun build(methods: List<MethodEmit>): ByteArray {
+    fun build(methods: List<MethodEmit>, fields: List<FieldEmit> = emptyList()): ByteArray {
         val p = Pool()
         val thisC = p.cls(p.utf8(className))
         val superC = p.cls(p.utf8("java/lang/Object"))
@@ -483,7 +559,7 @@ internal class ClassFile(private val className: String) {
         val methodNameIdx = methods.associate { it.name to p.utf8(it.name) }
         val methodDescIdx = methods.associate { it.descriptor to p.utf8(it.descriptor) }
 
-        fun expandMethod(cg: CodeGen): ByteArray {
+        fun expandMethod(cg: CodeGen, fieldRefs: Map<String, Int>): ByteArray {
             val strIdx = mutableMapOf<String, Int>()
             fun s(v: String) = strIdx.getOrPut(v) { p.string(p.utf8(v)) }
             cg.prints.filterIsInstance<CodeGen.PrintSite.Str>().forEach { s(it.s) }
@@ -504,10 +580,11 @@ internal class ClassFile(private val className: String) {
                 0xF9, 0xF8, 0xF5, 0xF4 -> 6
                 0xF6 -> 3
                 0xFE -> 3 // invokestatic
+                0xEC, 0xED -> 3 // getstatic/putstatic
                 else -> 1
             }
             fun markerWidth(op: Int) = when (op) {
-                0xFC, 0xFD, 0xF9, 0xF8, 0xF5, 0xF4, 0xFE -> 2
+                0xFC, 0xFD, 0xF9, 0xF8, 0xF5, 0xF4, 0xFE, 0xEC, 0xED -> 2
                 0xFA, 0xF6 -> 1
                 else -> 1
             }
@@ -517,7 +594,7 @@ internal class ClassFile(private val className: String) {
             while (oi < raw.size) {
                 map[oi] = ni
                 val op = raw[oi]
-                if (op in listOf(0xFC, 0xFD, 0xFA, 0xF9, 0xF8, 0xF5, 0xF4, 0xF6, 0xFE)) {
+                if (op in listOf(0xFC, 0xFD, 0xFA, 0xF9, 0xF8, 0xF5, 0xF4, 0xF6, 0xFE, 0xEC, 0xED)) {
                     ni += expandLen(oi); oi += markerWidth(op)
                 } else { ni += 1; oi += 1 }
             }
@@ -591,7 +668,21 @@ internal class ClassFile(private val className: String) {
                     0xFE -> {
                         val call = cg.calls[raw[oi + 1]]
                         val ref = methRef(call.name, call.descriptor)
-                        expanded += 0xB8 // invokestatic
+                        expanded += 0xB8
+                        expanded += (ref shr 8) and 0xFF; expanded += ref and 0xFF
+                        oi += 2
+                    }
+                    0xEC -> {
+                        val fa = cg.fieldAccess[raw[oi + 1]]
+                        val ref = fieldRefs[fa.name] ?: 0
+                        expanded += 0xB2 // getstatic
+                        expanded += (ref shr 8) and 0xFF; expanded += ref and 0xFF
+                        oi += 2
+                    }
+                    0xED -> {
+                        val fa = cg.fieldAccess[raw[oi + 1]]
+                        val ref = fieldRefs[fa.name] ?: 0
+                        expanded += 0xB3 // putstatic
                         expanded += (ref shr 8) and 0xFF; expanded += ref and 0xFF
                         oi += 2
                     }
@@ -604,7 +695,7 @@ internal class ClassFile(private val className: String) {
             oi = 0; var ei = 0
             while (oi < raw.size) {
                 val op = raw[oi]
-                if (op in listOf(0xFC, 0xFD, 0xFA, 0xF9, 0xF8, 0xF5, 0xF4, 0xF6, 0xFE)) {
+                if (op in listOf(0xFC, 0xFD, 0xFA, 0xF9, 0xF8, 0xF5, 0xF4, 0xF6, 0xFE, 0xEC, 0xED)) {
                     ei += expandLen(oi); oi += markerWidth(op)
                 } else if (isBranch(op) && oi + 2 < raw.size) {
                     val oldOff = ((raw[oi + 1] shl 8) or raw[oi + 2]).toShort().toInt()
@@ -625,14 +716,27 @@ internal class ClassFile(private val className: String) {
         out.writeShort(49)
 
         // We need pool complete before writing — build method codes first which may add pool entries
-        val methodCodes = methods.map { it to expandMethod(it.cg) }
+        // Register fields in pool early
+        val fieldNameIdx = fields.associate { it.name to p.utf8(it.name) }
+        val fieldDescIdx = fields.associate { it.name to p.utf8(JvmBackend.jvmType(it.type)) }
+        val fieldRefs = fields.associate { f ->
+            f.name to p.field(thisC, p.nat(fieldNameIdx[f.name]!!, fieldDescIdx[f.name]!!))
+        }
+
+        val methodCodes = methods.map { it to expandMethod(it.cg, fieldRefs) }
 
         p.write(out)
         out.writeShort(0x0001)
         out.writeShort(thisC)
         out.writeShort(superC)
-        out.writeShort(0)
-        out.writeShort(0)
+        out.writeShort(0) // interfaces
+        out.writeShort(fields.size)
+        for (f in fields) {
+            out.writeShort(0x0009) // public static
+            out.writeShort(fieldNameIdx[f.name]!!)
+            out.writeShort(fieldDescIdx[f.name]!!)
+            out.writeShort(0) // attributes
+        }
         out.writeShort(methods.size)
         for ((m, codeBytes) in methodCodes) {
             out.writeShort(0x0009) // public static
