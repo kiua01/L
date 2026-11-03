@@ -32,11 +32,6 @@ L provides a unified high-level model that can target both ecosystems, with clea
 ### 3. Modern UI (Built into L)
 Create very modern, beautiful, fluid interfaces for launchers and tools — all in the same language.
 
-- Declarative & reactive
-- Excellent desktop + Android support
-- Deep integration with the rest of L
-- No separate UI language needed
-
 ### 4. Single File Extension
 All L source files use **`.L`**:
 
@@ -56,6 +51,8 @@ LauncherCore.L      // shared launcher logic
 | [Goals](docs/GOALS.md) | Primary goals and non-goals |
 | [Features](docs/FEATURES.md) | Cross-edition portability + modern UI |
 | [Specification](docs/SPEC.md) | Early language specification draft |
+| [Type System](docs/TYPE_SYSTEM.md) | Detailed type system outline |
+| [Minecraft DSL](docs/MINECRAFT_DSL.md) | Registries, entities, events, packets, datagen |
 | [Syntax](docs/SYNTAX.md) | Kotlin parity + Minecraft DSL vision |
 | [Grammar](docs/GRAMMAR.md) | Formal grammar sketch |
 | [Compiler](docs/COMPILER.md) | Compiler architecture notes |
@@ -114,6 +111,8 @@ L/
 │   ├── GOALS.md
 │   ├── FEATURES.md
 │   ├── SPEC.md
+│   ├── TYPE_SYSTEM.md
+│   ├── MINECRAFT_DSL.md
 │   ├── SYNTAX.md
 │   ├── GRAMMAR.md
 │   └── COMPILER.md
@@ -133,12 +132,13 @@ L/
 - [x] Syntax overview + Minecraft DSL vision
 - [x] Formal grammar sketch
 - [x] Compiler architecture notes
+- [x] Type system outline
+- [x] Minecraft DSL design (registries, entities, events, packets, datagen)
 - [x] Cross-edition portability vision
 - [x] Modern UI capabilities (built into L)
 - [x] Single `.L` file extension decision
 - [x] Roadmap
 - [x] Example sketches
-- [ ] Detailed type system outline
 - [ ] Standard library design
 - [ ] Compiler prototype
 - [ ] Minecraft DSL prototypes
