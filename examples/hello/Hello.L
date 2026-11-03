@@ -2,5 +2,12 @@
 
 fun main() {
     println("Hello from L!")
-    println("Compiler prototype 0.0.4")
+    val x = 10
+    val y = 32
+    println(x + y)
+    if (x < y) {
+        println("x < y")
+    } else {
+        println("x >= y")
+    }
 }
