@@ -1,175 +1,62 @@
 # L Standard Library Outline (Draft)
 
-> Status: Early design.  
-> The standard library is organized into core modules plus domain-specific modules for Minecraft, launchers, and UI.
+> Status: Design complete for Phase 0.  
+> Modules cover core language needs plus Minecraft, launchers, UI, 3D, and web.
 
-All source files use the **`.L`** extension.
+All general source files use **`.L`**. Website sources use **`.le`**.
 
 ## 1. Design Principles
-
-- Kotlin standard library parity as the baseline
+- Kotlin standard library parity as baseline
 - Small, focused modules
-- Low-allocation alternatives for hot paths (game loops, UI recomposition)
-- Clear separation between core language support and Minecraft / UI domain libraries
-- Multiplatform from the start (`common`, `jvm`, `android`, …)
+- Low-allocation options for hot paths
+- Multiplatform from the start
 
-## 2. Core Modules (Kotlin Parity + Extensions)
-
-### `l.core`
-- Basic types and top-level functions
-- `Any`, `Unit`, `Nothing`, primitives, `String`, arrays
-- Null-safety helpers
-- `lazy`, `Delegates`, etc.
-
-### `l.collections`
-- `List`, `MutableList`, `Set`, `MutableSet`, `Map`, `MutableMap`
-- `Sequence`, builders, higher-order functions
-- Read-only vs mutable distinction
-
-### `l.coroutines`
-- Full structured concurrency
-- `suspend` functions, `CoroutineScope`, `Job`, `Deferred`
-- `Flow`, `Channel`, `Select`
-- Dispatchers appropriate for JVM and Android
-
-### `l.io` / `l.files`
-- Path abstraction
-- Basic file and directory operations
-- Multiplatform expect/actual where needed
-
-### `l.text`
-- String builders, formatting
-- (Later) richer text / adventure-style text for Minecraft
-
-### `l.time`
-- Duration, Instant, Clock abstractions
-
-### `l.concurrent`
-- Atomics, locks, concurrent collections (where appropriate)
+## 2. Core Modules
+- `l.core` — primitives, basics, null-safety helpers
+- `l.collections` — lists, sets, maps, sequences
+- `l.coroutines` — structured concurrency, Flow, channels
+- `l.io` / `l.files` — paths and file operations
+- `l.text` — strings and formatting
+- `l.time` — duration, clocks
+- `l.concurrent` — atomics / concurrent utilities
 
 ## 3. Minecraft Modules
-
-### `l.minecraft` (core)
-- `Identifier`
-- `Registry`, `RegistryKey`
-- Edition enum and targeting helpers
-- Common event interfaces
-- Logging helpers (`logger()`)
-
-### `l.minecraft.registry`
-- Registry DSL implementation
-- Deferred registration support
-- Helpers for blocks, items, entities, etc.
-
-### `l.minecraft.entity`
-- High-level component types (`Health`, `Movement`, `Attack`, …)
-- Entity builder / DSL
-- Cross-edition component mapping
-
-### `l.minecraft.event`
-- `on` / `onEach` helpers
-- Event bus abstractions
-- Lifecycle-aware subscriptions
-
-### `l.minecraft.network`
-- Packet DSL
-- Codec building blocks
-- Client / server handler wiring
-
-### `l.minecraft.datagen`
-- Data generation entry points
-- Model, recipe, tag, loot table helpers
-- Dual emission (Java data packs + Bedrock definitions) when targeting both
-
-### `l.minecraft.bedrock` (optional / advanced)
-- Lower-level Bedrock component and Molang interop
-- Used mainly by the cross-edition backend
+- `l.minecraft` — Identifier, Registry, Edition, logging
+- `l.minecraft.registry` — registry DSL
+- `l.minecraft.entity` — components + entity DSL
+- `l.minecraft.event` — on / onEach
+- `l.minecraft.network` — packet DSL
+- `l.minecraft.datagen` — models, recipes, tags, dual emission
+- `l.minecraft.bedrock` — lower-level Bedrock support
 
 ## 4. Launcher Modules
+- `l.launcher` — instances, versions, downloads, process launch
+- `l.launcher.android` — Android paths, permissions, integration
 
-### `l.launcher`
-- Instance model
-- Version / manifest handling
-- Download and verification utilities
-- Process launching abstractions
-- Auth helpers (high-level)
+## 5. UI Modules
+- `l.ui` — Composable runtime, State, Modifier
+- `l.ui.layout` — Column, Row, Box, Lazy grids/lists
+- `l.ui.material` — design system components + theming
+- `l.ui.animation` — transitions and animated values
+- `l.ui.platform` — desktop & Android integration
 
-### `l.launcher.android`
-- Android-specific paths, permissions, activity integration
-- JNI / native helpers when required
+## 6. 3D / Graphics Modules
+- `l.math` — Vec2/3/4, Quat, Mat4
+- `l.graphics` / `l.three` — Scene3D, Camera, Lights, Model, Mesh, Material, Animation
+- Platform backends for desktop, Android, and web
 
-## 5. UI Modules (Built into L)
+## 7. Web Modules (`.le`)
+- `l.web` — pages, routing, HTML/component model, browser interop
+- `l.web.three` — web 3D backend (WebGL / WebGPU)
+- Asset loading and bundling integration
 
-### `l.ui`
-- `@Composable` runtime support
-- `State`, `mutableStateOf`, `derivedStateOf`
-- Basic composition and recomposition engine (or binding to an existing one)
-- `Modifier` system
-
-### `l.ui.layout`
-- Column, Row, Box, Lazy lists/grids
-- Alignment, arrangement, constraints
-
-### `l.ui.material` (or similar design system)
-- Buttons, Cards, TextFields, TopBars, FABs, …
-- Theming and design tokens
-- Typography, colors, shapes
-
-### `l.ui.animation`
-- Animated values
-- Transitions
-- Content size / visibility animations
-
-### `l.ui.platform`
-- Desktop windowing helpers
-- Android Activity / ComposeView integration
-- Input (pointer, keyboard, focus)
-
-## 6. Multiplatform Layout
-
+## 8. Multiplatform Layout
 ```
-common/
-  l.core
-  l.collections
-  l.coroutines
-  l.minecraft          (common abstractions)
-  l.ui                 (common UI)
-
-jvm/
-  l.minecraft.jvm      (Fabric/Forge/etc. implementations)
-  l.launcher
-  l.ui.desktop
-
-android/
-  l.launcher.android
-  l.ui.android
+common/   — shared logic, shared UI/3D abstractions
+jvm/      — Minecraft Java, desktop launchers
+android/  — Android launchers & UI
+web/      — websites and web 3D
 ```
 
-## 7. Naming & Imports
-
-```l
-import l.minecraft.registry.*
-import l.ui.*
-import l.ui.material.*
-```
-
-Short, consistent package names. The language itself can later provide conveniences (auto-imports for the most common Minecraft and UI symbols inside `.L` files marked as mods or UI).
-
-## 8. Versioning & Compatibility
-
-- Semantic versioning for the standard library
-- Clear separation between stable and experimental modules
-- Binary compatibility goals aligned with Kotlin where practical
-
-## 9. Open Questions
-
-- How much of the Kotlin stdlib to re-export vs. re-implement?
-- Exact relationship with Jetpack Compose / Compose Multiplatform (bind vs. reimplement)
-- Size of the default “Minecraft starter” dependency set
-- Whether some DSLs should live in the compiler (intrinsic) or pure library code
-
----
-
-Next concrete steps:
-- Define the exact public API surface of `l.minecraft` and `l.ui`
-- Prototype the registry and composable runtimes
+## 9. Versioning
+Semantic versioning for toolchain and standard library; experimental modules clearly marked.
