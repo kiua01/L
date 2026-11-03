@@ -77,7 +77,7 @@ fun main(args: Array<String>) {
             println("Wrote $outDir/$className.class")
             println("Run: java -cp $outDir $className")
         }
-        "version" -> println("L compiler prototype 0.0.3")
+        "version" -> println("L compiler prototype 0.0.4")
         else -> printUsage()
     }
 }
@@ -102,7 +102,7 @@ private fun printDecls(decls: List<Decl>, indent: String) {
 private fun printUsage() {
     println(
         """
-        |L compiler prototype 0.0.3
+        |L compiler prototype 0.0.4
         |
         |  l lex <file>
         |  l parse <file>
