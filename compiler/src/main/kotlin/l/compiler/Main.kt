@@ -67,7 +67,18 @@ fun main(args: Array<String>) {
             println("Wrote $outDir/$className.class")
             println("Run: java -cp $outDir $className")
         }
-        "version" -> println("L compiler prototype 0.0.13")
+        "fabric-json" -> {
+            val id = args.getOrNull(1) ?: "example_mod"
+            val name = args.getOrNull(2) ?: "Example Mod"
+            val out = File(args.getOrNull(3) ?: "out")
+            val mainClass = args.getOrNull(4) ?: "Main"
+            FabricModJson.write(
+                FabricModJson.Spec(id = id, name = name, mainClass = mainClass),
+                out
+            )
+            println("Wrote ${out}/fabric.mod.json (Fabric target; Bear loader later)")
+        }
+        "version" -> println("L compiler prototype 0.0.14")
         else -> printUsage()
     }
 }
@@ -92,13 +103,14 @@ private fun printDecls(decls: List<Decl>, indent: String) {
 private fun printUsage() {
     println(
         """
-        |L compiler prototype 0.0.13
+        |L compiler prototype 0.0.14
         |
         |  l lex <file>
         |  l parse <file>
         |  l resolve <file>
         |  l check <file>
         |  l compile <file> [outDir] [ClassName]
+        |  l fabric-json <modId> [name] [outDir] [mainClass]
         |  l version
         """.trimMargin()
     )
